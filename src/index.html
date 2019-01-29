@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Opatomic Admin Tool</title>
+
+<script type="text/javascript" src="chart/chart.min.js"></script>
+<script type="text/javascript" src="ace-min-noconflict/ace.js"></script>
+<script type="text/javascript" src="ace-min-noconflict/ext-language_tools.js"></script>
+
+<script type="text/javascript" src="opac.browser.min.js"></script>
+<script type="text/javascript" src="opatest.js"></script>
+
+<style>
+
+html,body{margin:0;padding:0;min-width:100%;width:100%;max-width:100%;min-height:100%;height:100%;max-height:100%;}
+html {overflow-y:scroll}
+
+body {font:14px/1.1 'Verdana', sans-serif;color:#555;background:#eee}
+.table td p{text-align:center}
+p{margin:0 0 9px;line-height:18px}
+.table{width:100%}
+.table th,.table td{padding:5px;line-height:18px;text-align:left;vertical-align:top}
+.table th{font-weight:bold}
+.table thead th{vertical-align:bottom}
+.table colgroup+thead tr:first-child th,.table colgroup+thead tr:first-child td,.table thead:first-child tr:first-child th,.table thead:first-child tr:first-child td{border-top:0}
+.table tbody+tbody{border-top:2px solid #ddd}
+
+/*canvas {display: inline-block !important}*/
+
+code.pretty .undef{color:#b896ed}
+code.pretty .null {color:#b896ed}
+code.pretty .sortmax {color:#b896ed}
+code.pretty .bool {color:#ff8f2f}
+code.pretty .num  {color:navy}
+code.pretty .str  {color:#080}
+code.pretty .blob {color:olive}
+code.pretty .error {color:red}
+
+code.bash {background-color:black;color:grey;font-family:Courier New,monospace;display:block;margin:2px 60px 2px 30px;padding:3px;}
+
+textarea{white-space:pre}
+
+#sysInfoTable td{padding-right:10px;padding-left:10px}
+#sysCharts td {height:150px;padding:10px;width:300px}
+
+
+#tabs {min-width:320px;max-width:800px;padding:20px;margin:0 auto;background:#fff}
+
+*, *:before, *:after {margin:0;padding:0;box-sizing:border-box}
+
+section{display:none;padding:20px 0 0;border-top:1px solid #ddd;min-height:400px}
+#tabs>label{display:inline-block;margin:0 0 -1px;padding:10px;font-weight:600;text-align:center;color:#bbb;border:1px solid transparent}
+#tabs>label:before{font-weight:normal;margin-right:10px}
+#tabs>label:hover{color:#888;cursor:pointer}
+#tabs>input{display:none}
+
+#tabs>input:checked + label {color:#555;border:1px solid #ddd;border-top:2px solid orange;border-bottom:1px solid #fff}
+
+#tab1:checked ~ #tab1Body,
+#tab2:checked ~ #tab2Body,
+#tab3:checked ~ #tab3Body,
+#tab4:checked ~ #tab4Body,
+#tab5:checked ~ #tab5Body,
+#tab6:checked ~ #tab6Body {display:block}
+
+#tabs li {margin-left:15px}
+
+/*
+This resizes the tabs when screen is small TODO: rethink this for mobile devices (icons instead of words in tabs?)
+@media screen and (max-width: 650px) {
+	#tabs>label {
+		font-size: 0;
+	}
+	#tabs>label:before {
+		margin: 0;
+		font-size: 18px;
+	}
+}
+
+@media screen and (max-width: 400px) {
+	#tabs>label {
+		padding: 15px;
+	}
+}
+*/
+
+
+</style>
+
+<script type="text/javascript">
+
+var WSCONN;
+var OPAC;
+
+var GTIMERLEN = 200;
+var GCHARTS = {};
+var GBWINLAST;
+var GBWOUTLAST;
+var GSTATSTIME;
+var GTIMEOUT;
+
+var LUAEDITOR;
+
+
+
+
+function newChart(id, label, numPoints, color) {
+	var ctx = document.getElementById(id).getContext("2d");
+	var c = new Chart(ctx, {
+		type: "line",
+		data: {
+			labels: new Array(numPoints),
+			datasets: [
+				{
+					label: label,
+					data: new Array(numPoints),
+					pointRadius: 0,
+					fill: false,
+					borderColor: color,
+					borderWidth: 1
+				}
+			]
+		},
+		options: {
+			scales: {
+				xAxes: [{
+					display: false
+				}],
+				yAxes: [{
+					ticks: {
+						beginAtZero:true,
+						callback: function (value, index, values) {
+							return prettyNum(value);
+						}
+					}
+				}]
+			},
+			tooltips: {enabled: false},
+			hover: {mode: null}
+		}
+	});
+	GCHARTS[id] = c;
+	return c;
+}
+
+function initCharts() {
+	// note: degrade gracefully if Chart.js source is unavailable (simply do not show charts)
+	if (typeof Chart !== 'undefined') {
+		newChart("netrecvChart", "net.recv", 120, "blue");
+		newChart("netsentChart", "net.sent", 120, "blue");
+		newChart("latencyChart", "latency (ms)", 120, "blue");
+		newChart("heapChart", "heap", 120, "blue");
+		newChart("dbszChart", "DB size", 120, "blue");
+	} else {
+		// TODO: show error message where charts should be
+	}
+}
+
+function initPage() {
+	disableButtons(true);
+	initCharts();
+
+	document.getElementById("timerLen").textContent = GTIMERLEN.toString();
+	document.getElementById("opacjsVer").textContent = "v" + Opatomic.version;
+
+	// TODO: show version of Chart.js library; as of now, this cannot be determined from library itself.
+	//   should contact via github to request a "version" property in the library?
+
+	// TODO: add example script to editor
+
+	if (typeof ace !== 'undefined') {
+		document.getElementById("acejsVer").textContent = "v" + ace.version;
+		LUAEDITOR = ace.edit("scriptInput");
+		LUAEDITOR.session.setMode("ace/mode/lua");
+		LUAEDITOR.setOptions({enableBasicAutocompletion:true,enableSnippets:true});
+	} else {
+		// if ace editor is not available then just use a textarea for script editor
+		document.getElementById('scriptInput').innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
+		LUAEDITOR = {
+			getValue: function() {
+				return document.getElementById('scriptTextEditor').value;
+			}
+		};
+	}
+}
+
+function addChartPoint(chartName, val) {
+	var tabVisible = document.getElementById("tab3").checked;
+	var chart = GCHARTS[chartName];
+	if (chart) {
+		var data = chart.data.datasets[0].data;
+		data.push(val);
+		data.shift();
+		if (tabVisible) {
+			chart.update(0);
+		}
+	}
+}
+
+function prettySize(size) {
+	if (size >= 1073741824) {
+		return (Math.round(size / 1073741824 * 100) / 100) + " GB";
+	} else if (size >= 1048576) {
+		return (Math.round(size / 1048576 * 100) / 100) + " MB";
+	} else if (size >= 1024) {
+		return (Math.round(size / 1024 * 100) / 100) + " KB";
+	} else {
+		return size + " B";
+	}
+}
+
+function prettyNum(size) {
+	if (size >= 1000000) {
+		return (Math.round(size / 1000000 * 10) / 10) + "M";
+	} else if (size >= 1000) {
+		return (Math.round(size / 1000 * 10) / 10) + "K";
+	} else {
+		return size;
+	}
+}
+
+function prettyUptime(t) {
+	var msperm = 1000 * 60;
+	var msperh = msperm * 60;
+	var msperd = msperh * 24;
+	if (t >= msperd) {
+		var val = Math.floor(t / msperd);
+		return val + "d " + prettyUptime(t - (val * msperd));
+	} else if (t >= msperh) {
+		var val = Math.floor(t / msperh);
+		return val + "h " + prettyUptime(t - (val * msperh));
+	} else if (t >= msperm) {
+		var val = Math.floor(t / msperm);
+		return val + "m " + prettyUptime(t - (val * msperm));
+	} else {
+		var val = Math.floor(t / 1000);
+		return val + "s";
+	}
+}
+
+function infoRow(name, val) {
+	if (val) {
+		return "<tr><td>" + name + "</td><td>" + val + "</td></tr>";
+	}
+}
+
+function updateCharts() {
+	var callTime = new Date().getTime();
+	OPAC.callA("INFO", null, function(response, err) {
+		if (!response || err) {
+			// an error might occur when client is closed with an outstanding INFO request
+			if (!isClosedErr(err)) {
+				// TODO: handle err better
+				if (console) {
+					console.log("unsupported response in updateCharts()");
+				}
+			}
+			return;
+		}
+		var currTime = new Date().getTime();
+		var timeElapsed = GSTATSTIME ? (currTime - GSTATSTIME) / 1000 : 1;
+		GSTATSTIME = currTime;
+
+		var runtime = currTime - callTime;
+		var result = {};
+		for (var i = 0; i < response.length; ++i) {
+			var idx = response[i].indexOf("=");
+			if (idx > 0) {
+				result[response[i].substring(0, idx)] = response[i].substring(idx + 1);
+			}
+		}
+
+
+		if ("net.recv" in result) {
+			if (GBWINLAST) {
+				addChartPoint("netrecvChart", (result["net.recv"] - GBWINLAST) / timeElapsed);
+			}
+			GBWINLAST = result["net.recv"];
+		}
+
+		if ("net.sent" in result) {
+			if (GBWOUTLAST) {
+				addChartPoint("netsentChart", (result["net.sent"] - GBWOUTLAST) / timeElapsed);
+			}
+			GBWOUTLAST = result["net.sent"];
+		}
+
+		addChartPoint("latencyChart", runtime);
+
+		if ("db.totUsed" in result && "dbszChart" in GCHARTS) {
+			addChartPoint("dbszChart", result["db.totUsed"]);
+		}
+		if ("mem.totalloc" in result && "heapChart" in GCHARTS) {
+			addChartPoint("heapChart", result["mem.totalloc"]);
+		}
+
+		var str = "";
+		str += infoRow("db size", prettySize(result["db.totUsed"]));
+		str += infoRow("oplog len", prettySize(result["db.oplogLen"]));
+		str += infoRow("undo log len", prettySize(result["db.undoLogBuffLen"]));
+		document.getElementById("sysInfoTable").innerHTML = str;
+
+
+		if ("db.totUsed" in result) {
+			document.getElementById("stat_dbsz").textContent = prettySize(result["db.totUsed"]);
+		}
+		if ("mem.totalloc" in result) {
+			document.getElementById("stat_mem").textContent = prettySize(result["mem.totalloc"]);
+		}
+		//document.getElementById("stat_keys").textContent = result["keys"];
+		if ("net.conns" in result) {
+			document.getElementById("stat_clients").textContent = prettyNum(result["net.conns"]);
+		}
+		//document.getElementById("stat_totcmd").textContent = prettyNum(result["cmd.total"]);
+		if ("s.uptime" in result) {
+			document.getElementById("stat_uptime").textContent = prettyUptime(result["s.uptime"]);
+		}
+		// note: browsers may set timeouts to be 1 second when window is not in focus
+		GTIMEOUT = setTimeout(updateCharts, GTIMERLEN);
+	});
+	OPAC.flush();
+}
+
+// TODO: this function is copied from library; expose & use library version; remove this function
+function indent(space, depth) {
+	var indent = "";
+	if (typeof space === "number") {
+		for (var i = 0; i < space * depth ; ++i) {
+			indent += " ";
+		}
+	} else if (typeof space === "string") {
+		for (var i = 0; i <= depth; ++i) {
+			indent += space;
+		}
+	}
+	return indent;
+}
+
+function prettyResponse2(obj, space, depth) {
+	switch (Opatomic.opaType(obj)) {
+		case "undefined":
+			return '<span class="undef">undefined</span>';
+		case "null":
+			return '<span class="null">null</span>';
+		case "boolean":
+			return '<span class="bool">' + Opatomic.stringify(obj) + '</span>';
+		case "SORTMAX":
+			return '<span class="sortmax">SORTMAX</span>';
+		case "number":
+		case "BigInteger":
+		case "BigDec":
+			return '<span class="num">' + Opatomic.stringify(obj) + '</span>';
+		case "Uint8Array":
+		case "Buffer":
+			return '<span class="blob">' + Opatomic.stringify(obj) + '</span>';
+		case "string":
+			return '<span class="str">' + escEntities(Opatomic.stringify(obj)) + '</span>';
+		case "Array":
+			if (obj.length == 0) {
+				return "[]";
+			}
+			depth = depth ? depth : 0;
+			var strs = [];
+			for (var i = 0; i < obj.length; ++i) {
+				strs[i] = prettyResponse2(obj[i], space, depth + 1);
+			}
+			if (!space) {
+				return "[" + strs.join(",") + "]";
+			}
+			var indent1 = indent(space, depth);
+			var indent2 = indent(space, depth + 1);
+			return "[\n" + indent2 + strs.join(",\n" + indent2) + "\n" + indent1 + "]";
+	}
+	throw "unhandled case in switch";
+}
+
+function prettyResponse(result, err) {
+	if (err) {
+		return '<span class="error">ERROR: </span>' + prettyResponse2(err, 4);
+	} else {
+		var text = prettyResponse2(result, 4);
+		if (text.length > 1024000) {
+			// TODO: add config option to change this threshold
+			text = '<span class="error">Result too big</span>';
+		}
+		return text;
+	}
+}
+
+function iswhite(ch) {
+	// 0x20=space 0x9=\t 0xD=\r 0xA=\n
+	return ch == 0x20 || ch == 0x9 || ch == 0xD || ch == 0xA;
+}
+
+function isdigit(ch) {
+	// 0=0x30 9=0x39
+	return ch <= 0x39 && ch >= 0x30;
+}
+
+function isNumStr(s) {
+	// first char must be '-' or digit; if first is '-' then 2nd must be digit
+	var ch = s.charCodeAt(0);
+	if (ch == 0x2D) {
+		ch = s.charCodeAt(1);
+	}
+	if (!isdigit(ch)) {
+		return false;
+	}
+	var decpos = -1;
+	var epos = -1;
+	for (var i = 1; i < s.length; ++i) {
+		var ch = s.charCodeAt(i);
+		if (!isdigit(ch)) {
+			if (epos == -1 && (ch == 0x65 || ch == 0x45)) {
+				// 1 'e' or 'E' is allowed
+				epos = i;
+				if (i + 1 < s.length) {
+					ch = s.charCodeAt(i + 1);
+					if (ch == 0x2b || ch == 0x2d) {
+						// '+' or '-' is allowed after 'e' or 'E'; skip if present
+						++i;
+					}
+				}
+				if (i + 1 >= s.length) {
+					// e or E must be followed by a digit
+					return false;
+				}
+			} else if (ch == 0x2e && decpos == -1 && epos == -1) {
+				// 1 '.' is allowed and it must come before the 'E'
+				// TODO: if a decimal is present, then it must be followed by a digit?
+				decpos = i;
+			} else {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+function findQuoteEnd(str, idx, isQuote) {
+	for (; idx < str.length; ++idx) {
+		var ch = str.charAt(idx);
+		if (ch == "\\") {
+			++idx;
+			continue;
+		} else if (ch == "\"") {
+			++idx;
+			break;
+		}
+	}
+	return idx;
+}
+
+function findTokenEnd(str, idx) {
+	for (; idx < str.length; ++idx) {
+		var ch = str.charAt(idx);
+		if (iswhite(str.charCodeAt(idx)) || ch == "," || ch == "[" || ch == "]" || ch == "{" || ch == "}") {
+			break;
+		}
+	}
+	return idx;
+}
+
+function convertStr(str) {
+	if (/*str == "U" ||*/ str == "undefined") {
+		return undefined;
+	} else if (/*str == "N" ||*/ str == "null") {
+		return null;
+	} else if (/*str == "F" ||*/ str == "false") {
+		return false;
+	} else if (/*str == "T" ||*/ str == "true") {
+		return true;
+	} else if (str == "SORTMAX") {
+		return Opatomic.OpaDef.SORTMAX_OBJ;
+	} else if (str.length == 0) {
+		return str;
+	} else if (isNumStr(str)) {
+		return new Opatomic.BigDec(str);
+	}
+	return str;
+}
+
+function checkEscapedString(str) {
+	if (!str || (typeof str != "string")) {
+		return str;
+	}
+	if (str && (typeof str == "string") && str.charAt(0) == "~") {
+		if (str.charAt(1) == "~") {
+			return str.substring(1);
+		}
+		if (str.substring(0, 7) == "~base64") {
+			return buffFromBase64(str.substring(7));
+		}
+		if (str.substring(0, 4) == "~bin") {
+			// TODO: check to make sure all chars are >= 32 && < 127 ?
+			return (new TextEncoder("utf-8")).encode(str.substring(4));
+		}
+	}
+	return str;
+}
+
+function parseArgs2(str, idx, args, stopAtArrayEnd) {
+	while (idx < str.length) {
+		switch (str.charAt(idx)) {
+			case "\"":
+				var strEnd = findQuoteEnd(str, idx + 1);
+				if (strEnd < idx + 2 || (stopAtArrayEnd && strEnd >= str.length)) {
+					throw "string end quote not found";
+				}
+				args.push(checkEscapedString(JSON.parse(str.substring(idx, strEnd))));
+				idx = strEnd;
+				break;
+			case "{":
+			case "}":
+				throw "object tokens '{' and '}' not supported";
+			case "[":
+				var subarray = [];
+				idx = parseArgs2(str, idx + 1, subarray, true);
+				args.push(subarray);
+				break;
+			case "]":
+				if (stopAtArrayEnd) {
+					return idx + 1;
+				}
+				throw "extra array end token ']'";
+			case ",":
+			case " ":
+			case "\t":
+			case "\r":
+			case "\n":
+				// skip comma and whitespace
+				++idx;
+				break;
+			default:
+				var strEnd = findTokenEnd(str, idx);
+				args.push(checkEscapedString(convertStr(str.substring(idx, strEnd))));
+				idx = strEnd;
+				break;
+		}
+	}
+	if (stopAtArrayEnd) {
+		throw "array end token ']' not found";
+	}
+	return idx;
+}
+
+function parseArgs(str) {
+	var a = [];
+	parseArgs2(str, 0, a, false);
+	return a;
+}
+
+function showSubMsg(ch, msg) {
+	var msgtext = escEntities(Opatomic.stringify(ch)) + " : " + prettyResponse(msg, null);
+	var el = document.getElementById("pubsubMessages");
+	el.innerHTML += msgtext + "\n";
+}
+
+function isClosedErr(e) {
+	return e == Opatomic.OpaDef.ERR_CLOSED || (Array.isArray(e) && e[0] == Opatomic.OpaDef.ERR_CLOSED);
+}
+
+function subscribe(userTypedStr) {
+	var args = parseArgs(userTypedStr);
+	var channel = args[0];
+	OPAC.callAP("SUBSCRIBE", args, function(result, err) {
+		if (err) {
+			if (console && !isClosedErr(err)) {
+				console.log("error received in sub callback: " + err);
+			}
+			//TODO: show error
+		} else {
+			showSubMsg(channel, result);
+		}
+	});
+}
+
+function sendCommand(cmdString, cb) {
+	try {
+		cmdString = cmdString.trim();
+		var args = parseArgs(cmdString);
+		if (args.length == 0 || typeof args[0] != "string") {
+			throw "invalid command";
+		}
+		var cmd = args.shift();
+
+		OPAC.call(cmd, args, cb);
+	} catch (e) {
+		// note: must delay printing error message in case there were
+		// successful commands sent to server before this one.
+		OPAC.call("PING", null, function(result, error) {
+			cb(null, "Exception occurred in sendCommand(): " + e);
+		});
+	}
+}
+
+function sendLine(line, callTime) {
+	sendCommand(line, function(result, error) {
+		document.getElementById("execTime").textContent = ((new Date().getTime()) - callTime) + " ms";
+		document.getElementById("results").innerHTML += "<pre>&gt; " + escEntities(line) + "</pre><pre><code class=\"pretty\">" + prettyResponse(result, error) + "</code></pre>";
+	});
+}
+
+function parseAndSend(cmdString) {
+	try {
+		var lines = cmdString.trim().split("\n");
+		document.getElementById("results").innerHTML = "";
+		var callTime = new Date().getTime();
+		for (var i = 0; i < lines.length; ++i) {
+			var line = lines[i].trim();
+			if (line.length == 0) {
+				continue;
+			}
+			sendLine(line, callTime);
+		}
+	} catch (e) {
+		if (console) {
+			console.log(e);
+		}
+	}
+}
+
+function cmdStrKey(e, el) {
+	var code = (e.keyCode ? e.keyCode : e.which)
+	if (code == 13) {
+		if (e.ctrlKey) {
+			// ctrl+enter - submit form
+			parseAndSend(document.getElementById('cmdInput').value);
+		}
+		// enter is handled by form's onsubmit
+	}
+}
+
+function sendScript(script, keysStr, argsStr) {
+	var keys = parseArgs(keysStr);
+	var args = parseArgs(argsStr);
+	var callTime = new Date().getTime();
+	OPAC.call("EVAL", [script, keys, args], function(result, error) {
+		document.getElementById("scriptTime").textContent = ((new Date().getTime()) - callTime) + " ms";
+		document.getElementById("scriptResponse").innerHTML = prettyResponse(result, error);
+	});
+}
+
+/*
+function encodeRespStr(value) {
+	return "+" + value + "\r\n"
+}
+
+function encodeResp(value) {
+	console.log("encode " + value);
+	switch (typeof value) {
+		case "string":
+			if (value.indexOf("\r") == -1 && value.indexOf("\n") == -1) {
+				return "+" + value + "\r\n";
+			}
+			return "$" + value.length + value + "\r\n"
+		case "number":
+			return ":" + value + "\r\n";
+		case "object":
+			if (!value) {
+				alert("TODO: handle null in RESP");
+				return "null";
+			}
+			if (Object.prototype.toString.apply(value) === "[object Array]") {
+				partial = [];
+				// array
+				length = value.length;
+				for (i = 0; i < length; i += 1) {
+					partial[i] = encodeResp(value[i]);
+				}
+				return "*" + value.length + "\r\n" + partial.join("");
+			} else {
+				alert("unknown type");
+			}
+	}
+}
+*/
+
+function OpaWebsocketWriter(ws) {
+	this.ws = ws;
+}
+OpaWebsocketWriter.prototype.write = function(b) {
+	this.ws.send(b);
+}
+
+function disableButtons(disabled) {
+	var ids = ["disconnectButton", "cmdButton", "scriptButton", "subscribeButton", "testButton"];
+	for (var i = 0; i < ids.length; ++i) {
+		document.getElementById(ids[i]).disabled = disabled;
+	}
+}
+
+function connect(url) {
+	if (WSCONN) {
+		WSCONN.close();
+		for (var cid in GCHARTS) {
+			GCHARTS[cid].data.datasets[0].data.fill(undefined);
+		}
+		GBWINLAST = undefined;
+		GBWOUTLAST = undefined;
+		GSTATSTIME = undefined;
+		if (GTIMEOUT) {
+			clearTimeout(GTIMEOUT);
+		}
+	}
+	// TODO: error message if cannot connect
+	var websock = new WebSocket(url);
+	websock.binaryType = "arraybuffer";
+	websock.onmessage = function(event) {
+		OPAC.onRecv(new Uint8Array(event.data));
+	}
+	websock.onopen = function(msg) {
+		OPAC = new Opatomic.EventClient(new OpaWebsocketWriter(websock));
+		WSCONN = websock;
+		document.getElementById("ws_disconnected").style.display = "none";
+		document.getElementById("ws_connected").style.display = "inline";
+		document.getElementById("pubsubMessages").innerHTML = "";
+		disableButtons(false);
+		updateCharts();
+	}
+	websock.onclose = function(msg) {
+		document.getElementById("ws_connected").style.display = "none";
+		document.getElementById("ws_disconnected").style.display = "inline";
+		disableButtons(true);
+		if (OPAC) {
+			OPAC.onClose();
+		}
+		clearTimeout(GTIMEOUT);
+		OPAC = null;
+	}
+}
+
+function disconnect() {
+	if (WSCONN) {
+		WSCONN.close();
+	}
+}
+
+function runTestCase(cmd, expect, islast, results, callTime) {
+	sendCommand(cmd, function(result, err) {
+		results.push([cmd,expect,result,err]);
+		if (!islast) {
+			return;
+		}
+		if (callTime) {
+			document.getElementById("testExecTime").textContent = ((new Date().getTime()) - callTime) + " ms";
+		}
+
+		var allText = "";
+
+		var text = Opatomic.stringify(err ? err : result);
+		for (var i = 0; i < results.length; ++i) {
+			var iresult = results[i];
+			allText += "<pre>" + "&gt; " + iresult[0] + "</pre>";
+			if (iresult[3]) {
+				allText += "<pre>" + Opatomic.stringify(iresult[3]) + "</pre>";
+			} else if (opaCompare(iresult[1], iresult[2]) != 0) {
+				allText += "<pre style=\"color:red\">Expected: " + Opatomic.stringify(iresult[1]) + "\nReceived:" + Opatomic.stringify(iresult[2]) + "</pre>";
+			} else {
+				allText += "<pre>" + Opatomic.stringify(iresult[2]) + "</pre>";
+			}
+		}
+
+		document.getElementById("testResults").innerHTML = allText;
+
+	});
+}
+
+function runTestCasesUnsafe() {
+	var results = [];
+	var tests = OPATESTCASES;
+	var callTime = new Date().getTime();
+	for (var idx = 0; idx < tests.length - 1; idx += 2) {
+		var cmd = tests[idx];
+		var expect = tests[idx + 1];
+		runTestCase(tests[idx], tests[idx + 1], idx == tests.length - 2, results, callTime);
+	}
+}
+
+function runTestCases() {
+	document.getElementById("testResults").innerHTML = "";
+	if (document.getElementById("testAllowNonEmpty").checked) {
+		runTestCasesUnsafe();
+	} else {
+		sendCommand("DBSIZE", function(result, err) {
+			if (err) {
+				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">err: " + err + "</pre>";
+			} else if (result !== 0) {
+				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">DB is not empty</pre>";
+			} else {
+				runTestCasesUnsafe();
+			}
+		});
+	}
+}
+
+function changeTimerLen() {
+	var newVal = prompt("Refresh every ___ milliseconds", GTIMERLEN.toString());
+	newVal = parseInt(newVal);
+	if (Number.isInteger(newVal) && Number.isFinite(newVal) && !Number.isNaN(newVal)) {
+		GTIMERLEN = newVal;
+		document.getElementById("timerLen").textContent = GTIMERLEN.toString();
+	}
+}
+
+
+// ECHO [33,"hi",-5.06e-34,[[]], U null,    false -.;.\\. true, 18446744073709566,"xk\njrkj\telrjwlkejrfwklejrkwjer",[247923798734982734]]
+// ECHO [33,"hi",-5.06e-34,[[]], null, false, true, 18446744073709566,"kjrkjelrjwlkejrfwklejrkwjer",[247923798734982734]]
+// 18446744073709566
+
+
+function escEntities(s) {
+	// TODO: faster replacement function?
+	// note: replace '&' first!!
+	// note: regex is needed to replace ALL occurrences
+	s = s.replace(/&/g, "&amp;");
+	s = s.replace(/</g, "&lt;");
+	s = s.replace(/>/g, "&gt;");
+	s = s.replace(/"/g, "&quot;");
+	s = s.replace(/'/g, "&#039;");
+	return s;
+}
+
+
+
+</script>
+</head>
+
+<body onload="initPage();">
+
+<div style="min-width:320px;max-width:800px;padding:0px;margin:0 auto;background:#eee">
+<table style="width:100%">
+<tr>
+<td style="width:350px">
+	<form onsubmit="connect(document.getElementById('ws_url').value);return false;">
+	<label for="ws_url">Host: </label>
+	<input id="ws_url" size="30" value="ws://localhost:8080/"/>
+	<br/>
+	<input type="submit" value="Connect"/>
+	<button onclick="disconnect();return false;" id="disconnectButton" disabled="disabled">Disconnect</button>
+	<span id="ws_connected" style="display:none;color:green;">Connected</span>
+	<span id="ws_disconnected" style="color:red;">Disconnected</span>
+	</form>
+</td>
+<td>
+
+<table style="width:100%">
+	<tr>
+		<td style="width:60px">DB size</td><td style="width:100px"><span id="stat_dbsz"></span></td>
+		<td style="width:60px">Clients</td><td><span id="stat_clients"></span></td>
+	</tr>
+	<tr>
+		<td>Heap</td><td><span id="stat_mem"></span></td>
+		<td>Uptime</td><td><span id="stat_uptime"></span></td>
+	</tr>
+</table>
+
+</td>
+</tr>
+</table>
+</div>
+
+
+<div id="tabs">
+
+<input id="tab1" type="radio" name="tabs" checked>
+<label for="tab1">Command</label>
+<input id="tab2" type="radio" name="tabs">
+<label for="tab2">Script</label>
+<input id="tab3" type="radio" name="tabs">
+<label for="tab3">System</label>
+<input id="tab4" type="radio" name="tabs">
+<label for="tab4">Pub/Sub</label>
+<input id="tab5" type="radio" name="tabs">
+<label for="tab5">Testing</label>
+<input id="tab6" type="radio" name="tabs">
+<label for="tab6">About</label>
+
+<section id="tab1Body">
+<form id="cmdForm" onsubmit="parseAndSend(document.getElementById('cmdInput').value);return false;">
+<textarea id="cmdInput" rows="10" cols="80" onkeydown="cmdStrKey(event,this);">ECHO [undefined null false true SORTMAX]
+ECHO [-123, 0 0.123 4e11]
+ECHO [~binhello "hello" "123" "2.45" ["subarray" ["subsubarray"]]]
+INFO
+</textarea>
+<input type="submit" value="Run" id="cmdButton" disabled="disabled"/>
+</form>
+<span id="execTime"></span>
+<br/>
+<div id="results"></div>
+</section>
+
+<section id="tab2Body">
+<form onsubmit="sendScript(LUAEDITOR.getValue(), document.getElementById('scriptKeys').value, document.getElementById('scriptArgs').value);return false;">
+<div id="scriptInput" style="height:300px;width:100%"></div>
+<table><tr>
+<td><label for="scriptKeys">KEYS: </label></td>
+<td><input id="scriptKeys" size="60"/></td>
+</tr><tr>
+<td><label for="scriptArgs">ARGV: </label></td>
+<td><input id="scriptArgs" size="60"/></td>
+</tr></table>
+<input type="submit" value="Run" id="scriptButton" disabled="disabled"/>
+</form>
+<span id="scriptTime"></span>
+<br/>
+<pre><code id="scriptResponse" class="pretty"></code></pre>
+</section>
+
+<section id="tab3Body">
+<p>Refresh every <span id="timerLen" style="cursor:pointer;" onclick="changeTimerLen();"></span> ms</p>
+<table id="sysInfoTable"></table>
+<table id="sysCharts">
+<tr>
+	<td><canvas id="netrecvChart"></canvas></td>
+	<td><canvas id="netsentChart"></canvas></td>
+</tr>
+<tr>
+	<td><canvas id="latencyChart"></canvas></td>
+	<td><canvas id="heapChart"></canvas></td>
+</tr>
+<tr>
+	<td><canvas id="dbszChart"></canvas></td>
+	<td></td>
+</tr>
+</table>
+</section>
+
+<section id="tab4Body">
+<form onsubmit="subscribe(document.getElementById('subInput').value);return false;">
+<input id="subInput" value="" size="40"/>
+<input type="submit" value="Subscribe" id="subscribeButton" disabled="disabled"/>
+</form>
+<br/>
+<pre style="height:200px;overflow-y: scroll;"><code id="pubsubMessages" class="pretty"></code></pre>
+</section>
+
+<section id="tab5Body">
+<button onclick="opaTestParse()">Test parser</button>
+<br/>
+<br/>
+<p><input type="checkbox" id="testAllowNonEmpty"/> <label for="testAllowNonEmpty">Run tests even if db isn't empty (WARNING: this could modify/delete your data!!!)</label></p>
+<button onclick="runTestCases()" id="testButton" disabled="disabled">Run test cases</button>
+<span id="testExecTime"></span>
+<br/>
+<div id="testResults"></div>
+</section>
+
+<section id="tab6Body">
+<h1>Opatomic Admin Tool</h1>
+<p>View this project's source on <a href="https://github.com/opatomic/admin-browser">github</a>.</p>
+<p>Since your browser does not have sockets, a websocket proxy is needed to connect to the Opatomic server.
+You can use node.js + <a href="https://github.com/opatomic/tcpviaws-js">tcpviaws</a> to do this.</p>
+
+<h3>Setup:</h3>
+<p>
+<ul>
+	<li>Ubuntu setup:<br/><code class="bash">sudo apt-get install nodejs<br/>sudo apt-get install npm<br/>sudo npm install -g tcpviaws</code></li>
+	<li>Windows setup:<br><a href="https://nodejs.org/en/download/">Download</a> and install node. Make sure to also install npm (bundled with installer). Then run:<br/><code class="bash">npm install -g tcpviaws</code></li>
+</ul>
+<h3>Usage</h3>
+<p><code class="bash">tcpviaws 8080 localhost:4567</code></p>
+<p>Then connect to <code>ws://localhost:8080/</code> at the top of this page.</p>
+<br/>
+
+<hr/>
+<h3>This tool includes the following libraries:</h3>
+<ul>
+	<li><a href="https://github.com/opatomic/opac-js">opac-js</a> <span id="opacjsVer"></span>
+	<ul>
+		<li><a href="http://www-cs-students.stanford.edu/~tjw/jsbn/">jsbn</a> (<a href="jsbn-license">license</a>)</li>
+	</ul>
+	</li>
+	<li><a href="https://github.com/chartjs/Chart.js">Chart.js</a> (<a href="chart/LICENSE">license</a>)</li>
+	<li><a href="https://github.com/ajaxorg/ace">Ace Editor</a> <span id="acejsVer"></span> (<a href="ace-min-noconflict/LICENSE">license</a>)</li>
+</ul>
+
+</section>
+
+</div>
+
+</body>
+
+</html>
