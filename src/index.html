@@ -691,7 +691,7 @@ function disableButtons(disabled) {
 	}
 }
 
-function connect(url) {
+function connect(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
 		for (var cid in GCHARTS) {
@@ -717,7 +717,19 @@ function connect(url) {
 		document.getElementById("ws_connected").style.display = "inline";
 		document.getElementById("pubsubMessages").innerHTML = "";
 		disableButtons(false);
-		updateCharts();
+		if (pass && pass != "") {
+			OPAC.call("AUTH", [pass], function(result, err) {
+				if (!err) {
+					updateCharts();
+				} else {
+					if (console) {
+						console.log("AUTH failed")
+					}
+				}
+			});
+		} else {
+			updateCharts();
+		}
 	}
 	websock.onclose = function(msg) {
 		document.getElementById("ws_connected").style.display = "none";
@@ -833,9 +845,11 @@ function escEntities(s) {
 <table style="width:100%">
 <tr>
 <td style="width:350px">
-	<form onsubmit="connect(document.getElementById('ws_url').value);return false;">
+	<form onsubmit="connect(document.getElementById('ws_url').value,document.getElementById('ws_pass').value);return false;">
 	<label for="ws_url">Host: </label>
-	<input id="ws_url" size="30" value="ws://localhost:8080/"/>
+	<input id="ws_url" size="20" value="ws://localhost:8080/"/>
+	<label for="ws_pass">Pass: </label>
+	<input id="ws_pass" size="6" type="password"/>
 	<br/>
 	<input type="submit" value="Connect"/>
 	<button onclick="disconnect();return false;" id="disconnectButton" disabled="disabled">Disconnect</button>
