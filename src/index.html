@@ -296,6 +296,7 @@ function updateCharts() {
 		}
 
 		var str = "";
+		str += infoRow("version", result["exe.opaVersion"]);
 		str += infoRow("db size", prettySize(result["db.totUsed"]));
 		str += infoRow("oplog len", prettySize(result["db.oplogLen"]));
 		str += infoRow("undo log len", prettySize(result["db.undoLogBuffLen"]));
