@@ -37,7 +37,7 @@ code.pretty .str  {color:#080}
 code.pretty .blob {color:olive}
 code.pretty .error {color:red}
 
-code.bash {background-color:black;color:grey;font-family:Courier New,monospace;display:block;margin:2px 60px 2px 30px;padding:3px;}
+code.bash {background-color:black;color:#B3B3B3;font-family:Courier New,monospace;display:block;margin:2px 60px 2px 30px;padding:3px;}
 
 textarea{white-space:pre}
 
@@ -245,6 +245,12 @@ function infoRow(name, val) {
 	}
 }
 
+function resSetText(result, rkey, elid, fconv) {
+	if (rkey in result) {
+		document.getElementById(elid).textContent = fconv ? fconv(result[rkey]) : result[rkey];
+	}
+}
+
 function updateCharts() {
 	var callTime = new Date().getTime();
 	OPAC.callA("INFO", null, function(response, err) {
@@ -302,21 +308,11 @@ function updateCharts() {
 		str += infoRow("undo log len", prettySize(result["db.undoLogBuffLen"]));
 		document.getElementById("sysInfoTable").innerHTML = str;
 
+		resSetText(result, "db.totUsed", "stat_dbsz", prettySize);
+		resSetText(result, "mem.totalloc", "stat_mem", prettySize);
+		resSetText(result, "net.conns", "stat_clients", prettyNum);
+		resSetText(result, "s.uptime", "stat_uptime", prettyUptime);
 
-		if ("db.totUsed" in result) {
-			document.getElementById("stat_dbsz").textContent = prettySize(result["db.totUsed"]);
-		}
-		if ("mem.totalloc" in result) {
-			document.getElementById("stat_mem").textContent = prettySize(result["mem.totalloc"]);
-		}
-		//document.getElementById("stat_keys").textContent = result["keys"];
-		if ("net.conns" in result) {
-			document.getElementById("stat_clients").textContent = prettyNum(result["net.conns"]);
-		}
-		//document.getElementById("stat_totcmd").textContent = prettyNum(result["cmd.total"]);
-		if ("s.uptime" in result) {
-			document.getElementById("stat_uptime").textContent = prettyUptime(result["s.uptime"]);
-		}
 		// note: browsers may set timeouts to be 1 second when window is not in focus
 		GTIMEOUT = setTimeout(updateCharts, GTIMERLEN);
 	});
@@ -767,7 +763,7 @@ function runTestCase(cmd, expect, islast, results, callTime) {
 			var iresult = results[i];
 			allText += "<pre>" + "&gt; " + iresult[0] + "</pre>";
 			if (iresult[3]) {
-				allText += "<pre>" + Opatomic.stringify(iresult[3]) + "</pre>";
+				allText += "<pre style=\"color:red\">" + Opatomic.stringify(iresult[3]) + "</pre>";
 			} else if (opaCompare(iresult[1], iresult[2]) != 0) {
 				allText += "<pre style=\"color:red\">Expected: " + Opatomic.stringify(iresult[1]) + "\nReceived:" + Opatomic.stringify(iresult[2]) + "</pre>";
 			} else {
