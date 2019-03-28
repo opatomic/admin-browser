@@ -201,7 +201,7 @@ var OPATESTCASES = [
 	"BAPPEND b1 ~base640123456789abcdef", 60,
 	"DEL b1", 1,
 
-	"BATCH [[INCR exp1] [INCR exp1] [EXPIRE NONE 2000] [EXPIRE exp1 2000] [EXPIRE exp1 1000] ]", [1,2,0,1,1],
+	"BATCH [INCR exp1] [INCR exp1] [EXPIRE NONE 2000] [EXPIRE exp1 2000] [EXPIRE exp1 1000]", [1,2,0,1,1],
 ];
 
 
