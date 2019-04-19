@@ -435,7 +435,7 @@ function isNumStr(s) {
 	return true;
 }
 
-function findQuoteEnd(str, idx, isQuote) {
+function findQuoteEnd(str, idx) {
 	for (; idx < str.length; ++idx) {
 		var ch = str.charAt(idx);
 		if (ch == "\\") {
@@ -452,7 +452,7 @@ function findQuoteEnd(str, idx, isQuote) {
 function findTokenEnd(str, idx) {
 	for (; idx < str.length; ++idx) {
 		var ch = str.charAt(idx);
-		if (iswhite(str.charCodeAt(idx)) || ch == "," || ch == "[" || ch == "]" || ch == "{" || ch == "}") {
+		if (iswhite(str.charCodeAt(idx)) || ch == "," || ch == "[" || ch == "]" || ch == "\"" || ch == "{" || ch == "}") {
 			break;
 		}
 	}
