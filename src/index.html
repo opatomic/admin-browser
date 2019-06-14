@@ -452,6 +452,13 @@ function findQuoteEnd(str, idx) {
 function findTokenEnd(str, idx) {
 	for (; idx < str.length; ++idx) {
 		var ch = str.charAt(idx);
+		if (ch == "\\") {
+			if (idx + 1 >= str.length) {
+				throw "invalid escape sequence";
+			}
+			idx++;
+			continue;
+		}
 		if (iswhite(str.charCodeAt(idx)) || ch == "," || ch == "[" || ch == "]" || ch == "\"" || ch == "{" || ch == "}") {
 			break;
 		}
@@ -479,9 +486,6 @@ function convertStr(str) {
 }
 
 function checkEscapedString(str) {
-	if (!str || (typeof str != "string")) {
-		return str;
-	}
 	if (str && (typeof str == "string") && str.charAt(0) == "~") {
 		if (str.charAt(1) == "~") {
 			return str.substring(1);
@@ -531,7 +535,11 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 				break;
 			default:
 				var strEnd = findTokenEnd(str, idx);
-				args.push(checkEscapedString(convertStr(str.substring(idx, strEnd))));
+				var tokObj = convertStr(str.substring(idx, strEnd));
+				if (typeof tokObj == "string") {
+					tokObj = checkEscapedString(JSON.parse('"' + tokObj + '"'));
+				}
+				args.push(tokObj);
 				idx = strEnd;
 				break;
 		}
