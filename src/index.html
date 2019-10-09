@@ -253,7 +253,7 @@ function resSetText(result, rkey, elid, fconv) {
 
 function updateCharts() {
 	var callTime = new Date().getTime();
-	OPAC.callA("INFO", null, function(response, err) {
+	OPAC.callA("INFO", null, function(err, response) {
 		if (!response || err) {
 			// an error might occur when client is closed with an outstanding INFO request
 			if (!isClosedErr(err)) {
@@ -569,7 +569,7 @@ function isClosedErr(e) {
 function subscribe(userTypedStr) {
 	var args = parseArgs(userTypedStr);
 	var channel = args[0];
-	OPAC.callAP("SUBSCRIBE", args, function(result, err) {
+	OPAC.callAP("SUBSCRIBE", args, function(err, result) {
 		if (err) {
 			if (console && !isClosedErr(err)) {
 				console.log("error received in sub callback: " + err);
@@ -594,16 +594,16 @@ function sendCommand(cmdString, cb) {
 	} catch (e) {
 		// note: must delay printing error message in case there were
 		// successful commands sent to server before this one.
-		OPAC.call("PING", null, function(result, error) {
+		OPAC.call("PING", null, function(err, result) {
 			cb(null, "Exception occurred in sendCommand(): " + e);
 		});
 	}
 }
 
 function sendLine(line, callTime) {
-	sendCommand(line, function(result, error) {
+	sendCommand(line, function(err, result) {
 		document.getElementById("execTime").textContent = ((new Date().getTime()) - callTime) + " ms";
-		document.getElementById("results").innerHTML += "<pre>&gt; " + escEntities(line) + "</pre><pre><code class=\"pretty\">" + prettyResponse(result, error) + "</code></pre>";
+		document.getElementById("results").innerHTML += "<pre>&gt; " + escEntities(line) + "</pre><pre><code class=\"pretty\">" + prettyResponse(result, err) + "</code></pre>";
 	});
 }
 
@@ -641,9 +641,9 @@ function sendScript(script, keysStr, argsStr) {
 	var keys = parseArgs(keysStr);
 	var args = parseArgs(argsStr);
 	var callTime = new Date().getTime();
-	OPAC.call("EVAL", [script, keys, args], function(result, error) {
+	OPAC.call("EVAL", [script, keys, args], function(err, result) {
 		document.getElementById("scriptTime").textContent = ((new Date().getTime()) - callTime) + " ms";
-		document.getElementById("scriptResponse").innerHTML = prettyResponse(result, error);
+		document.getElementById("scriptResponse").innerHTML = prettyResponse(result, err);
 	});
 }
 
@@ -723,7 +723,7 @@ function connect(url, pass) {
 		document.getElementById("pubsubMessages").innerHTML = "";
 		disableButtons(false);
 		if (pass && pass != "") {
-			OPAC.call("AUTH", [pass], function(result, err) {
+			OPAC.call("AUTH", [pass], function(err, result) {
 				if (!err) {
 					updateCharts();
 				} else {
@@ -755,7 +755,7 @@ function disconnect() {
 }
 
 function runTestCase(cmd, expect, islast, results, callTime) {
-	sendCommand(cmd, function(result, err) {
+	sendCommand(cmd, function(err, result) {
 		results.push([cmd,expect,result,err]);
 		if (!islast) {
 			return;
@@ -800,7 +800,7 @@ function runTestCases() {
 	if (document.getElementById("testAllowNonEmpty").checked) {
 		runTestCasesUnsafe();
 	} else {
-		sendCommand("DBSIZE", function(result, err) {
+		sendCommand("DBSIZE", function(err, result) {
 			if (err) {
 				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">err: " + err + "</pre>";
 			} else if (result !== 0) {
