@@ -297,19 +297,19 @@ function updateCharts() {
 		if ("db.totUsed" in result && "dbszChart" in GCHARTS) {
 			addChartPoint("dbszChart", result["db.totUsed"]);
 		}
-		if ("mem.totalloc" in result && "heapChart" in GCHARTS) {
-			addChartPoint("heapChart", result["mem.totalloc"]);
+		if ("mem.totAlloc" in result && "heapChart" in GCHARTS) {
+			addChartPoint("heapChart", result["mem.totAlloc"]);
 		}
 
 		var str = "";
-		str += infoRow("version", result["exe.opaVersion"]);
+		str += infoRow("version", result["exe.opadVersion"]);
 		str += infoRow("db size", prettySize(result["db.totUsed"]));
 		str += infoRow("oplog len", prettySize(result["db.oplogLen"]));
 		str += infoRow("undo log len", prettySize(result["db.undoLogBuffLen"]));
 		document.getElementById("sysInfoTable").innerHTML = str;
 
 		resSetText(result, "db.totUsed", "stat_dbsz", prettySize);
-		resSetText(result, "mem.totalloc", "stat_mem", prettySize);
+		resSetText(result, "mem.totAlloc", "stat_mem", prettySize);
 		resSetText(result, "net.conns", "stat_clients", prettyNum);
 		resSetText(result, "s.uptime", "stat_uptime", prettyUptime);
 
