@@ -92,6 +92,7 @@ This resizes the tabs when screen is small TODO: rethink this for mobile devices
 
 var WSCONN;
 var OPAC;
+var ERRCODE_AUTH = -53;
 
 var GTIMERLEN = 200;
 var GCHARTS = {};
@@ -562,8 +563,12 @@ function showSubMsg(ch, msg) {
 	el.innerHTML += msgtext + "\n";
 }
 
-function isClosedErr(e) {
-	return e == Opatomic.OpaDef.ERR_CLOSED || (Array.isArray(e) && e[0] == Opatomic.OpaDef.ERR_CLOSED);
+function isErrCode(errResponse, intcode) {
+	return errResponse == intcode || (Array.isArray(errResponse) && errResponse[0] == intcode);
+}
+
+function isClosedErr(errResponse) {
+	return isErrCode(errResponse, Opatomic.OpaDef.ERR_CLOSED);
 }
 
 function subscribe(userTypedStr) {
@@ -719,6 +724,7 @@ function connect(url, pass) {
 		OPAC = new Opatomic.EventClient(new OpaWebsocketWriter(websock));
 		WSCONN = websock;
 		document.getElementById("ws_disconnected").style.display = "none";
+		document.getElementById("ws_connected").innerHTML = "Connected";
 		document.getElementById("ws_connected").style.display = "inline";
 		document.getElementById("pubsubMessages").innerHTML = "";
 		disableButtons(false);
@@ -728,12 +734,30 @@ function connect(url, pass) {
 					updateCharts();
 				} else {
 					if (console) {
-						console.log("AUTH failed")
+						console.log("AUTH failed: " + err)
 					}
+					document.getElementById("ws_connected").innerHTML += " <span style=\"color:red\">(AUTH fail)</span>";
 				}
 			});
 		} else {
-			updateCharts();
+			// PING to determine whether AUTH is needed
+			OPAC.call("PING", null, function(err, result) {
+				if (!err) {
+					updateCharts();
+				} else {
+					if (isErrCode(err, ERRCODE_AUTH)) {
+						if (console) {
+							console.log("AUTH required!");
+						}
+						document.getElementById("ws_connected").innerHTML += " <span style=\"color:red\">(AUTH req'd)</span>";
+					} else {
+						if (console) {
+							console.log("unexpected error response for PING command: " + err);
+						}
+						disconnect();
+					}
+				}
+			});
 		}
 	}
 	websock.onclose = function(msg) {
