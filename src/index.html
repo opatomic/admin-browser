@@ -728,7 +728,7 @@ function disableButtons(disabled) {
 	}
 }
 
-function connect(url, pass) {
+function connect2(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
 		for (var cid in GCHARTS) {
@@ -796,6 +796,19 @@ function connect(url, pass) {
 		}
 		clearTimeout(GTIMEOUT);
 		OPAC = null;
+	}
+}
+
+function connect(url, pass) {
+	try {
+		connect2(url, pass);
+	} catch (e) {
+		// If exception occurs during connect, then form will be submitted because onsubmit() will not return false.
+		//  Instead, catch all exceptions here.
+		// testing note: this exception can be triggered in firefox by loading this admin panel
+		//  over https:// but trying to connect over ws://
+		// TODO: show error message on page somewhere
+		console.log(e);
 	}
 }
 
