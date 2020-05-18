@@ -5,8 +5,6 @@
 <title>Opatomic Admin Tool</title>
 
 <script type="text/javascript" src="chart/chart.min.js"></script>
-<script type="text/javascript" src="ace-min-noconflict/ace.js"></script>
-<script type="text/javascript" src="ace-min-noconflict/ext-language_tools.js"></script>
 
 <script type="text/javascript" src="opac.browser.min.js"></script>
 <script type="text/javascript" src="opatest.js"></script>
@@ -101,6 +99,7 @@ var GBWOUTLAST;
 var GSTATSTIME;
 var GTIMEOUT;
 
+var ACELOADED = false;
 var LUAEDITOR;
 
 
@@ -158,6 +157,32 @@ function initCharts() {
 	}
 }
 
+function loadScript(url, onload) {
+	var el = document.createElement("script");
+	if (onload) {
+		el.onload = onload;
+		el.onreadystatechange = onload;
+	}
+	el.src = url;
+	document.body.appendChild(el);
+}
+
+function loadAceEditor() {
+	if (ACELOADED) {
+		return;
+	}
+	ACELOADED = true;
+	loadScript("ace-min-noconflict/ace.js", function() {
+		loadScript("ace-min-noconflict/ext-language_tools.js", function() {
+			document.getElementById('scriptInput').innerHTML = "";
+			document.getElementById("acejsVer").textContent = "v" + ace.version;
+			LUAEDITOR = ace.edit("scriptInput");
+			LUAEDITOR.session.setMode("ace/mode/lua");
+			LUAEDITOR.setOptions({enableBasicAutocompletion:true,enableSnippets:true});
+		});
+	});
+}
+
 function initPage() {
 	disableButtons(true);
 	initCharts();
@@ -170,19 +195,16 @@ function initPage() {
 
 	// TODO: add example script to editor
 
-	if (typeof ace !== 'undefined') {
-		document.getElementById("acejsVer").textContent = "v" + ace.version;
-		LUAEDITOR = ace.edit("scriptInput");
-		LUAEDITOR.session.setMode("ace/mode/lua");
-		LUAEDITOR.setOptions({enableBasicAutocompletion:true,enableSnippets:true});
-	} else {
-		// if ace editor is not available then just use a textarea for script editor
-		document.getElementById('scriptInput').innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
-		LUAEDITOR = {
-			getValue: function() {
-				return document.getElementById('scriptTextEditor').value;
-			}
-		};
+
+	document.getElementById('scriptInput').innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
+	LUAEDITOR = {
+		getValue: function() {
+			return document.getElementById('scriptTextEditor').value;
+		}
+	};
+
+	if (document.getElementById("tab2").checked) {
+		loadAceEditor();
 	}
 }
 
@@ -909,7 +931,7 @@ function escEntities(s) {
 
 <input id="tab1" type="radio" name="tabs" checked>
 <label for="tab1">Command</label>
-<input id="tab2" type="radio" name="tabs">
+<input id="tab2" type="radio" name="tabs" onclick="loadAceEditor();">
 <label for="tab2">Script</label>
 <input id="tab3" type="radio" name="tabs">
 <label for="tab3">System</label>
