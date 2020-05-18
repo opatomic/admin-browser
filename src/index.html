@@ -195,6 +195,11 @@ function initPage() {
 
 	// TODO: add example script to editor
 
+	if (window.location.hostname) {
+		var protocol = window.location.protocol == "https:" ? "wss://" : "ws://";
+		var port = window.location.port ? ":" + window.location.port : "";
+		document.getElementById('ws_url').value = protocol + window.location.hostname + port;
+	}
 
 	document.getElementById('scriptInput').innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
 	LUAEDITOR = {
