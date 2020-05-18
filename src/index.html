@@ -728,6 +728,18 @@ function disableButtons(disabled) {
 	}
 }
 
+function closeClient() {
+	document.getElementById("ws_connected").style.display = "none";
+	document.getElementById("ws_disconnected").style.display = "inline";
+	document.getElementById("ws_disconnected").innerHTML = "Disconnected";
+	disableButtons(true);
+	clearTimeout(GTIMEOUT);
+	if (OPAC) {
+		OPAC.onClose();
+		OPAC = null;
+	}
+}
+
 function connect2(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
@@ -741,18 +753,17 @@ function connect2(url, pass) {
 			clearTimeout(GTIMEOUT);
 		}
 	}
+	closeClient();
 	// TODO: error message if cannot connect
 	var websock = new WebSocket(url);
 	websock.binaryType = "arraybuffer";
 	websock.onmessage = function(event) {
 		OPAC.onRecv(new Uint8Array(event.data));
 	}
+	document.getElementById("ws_disconnected").innerHTML = "Connecting...";
+	OPAC = new Opatomic.EventClient(new OpaWebsocketWriter(websock));
+	WSCONN = websock;
 	websock.onopen = function(msg) {
-		OPAC = new Opatomic.EventClient(new OpaWebsocketWriter(websock));
-		WSCONN = websock;
-		document.getElementById("ws_disconnected").style.display = "none";
-		document.getElementById("ws_connected").innerHTML = "Connected";
-		document.getElementById("ws_connected").style.display = "inline";
 		document.getElementById("pubsubMessages").innerHTML = "";
 		disableButtons(false);
 		if (pass && pass != "") {
@@ -769,6 +780,11 @@ function connect2(url, pass) {
 		} else {
 			// PING to determine whether AUTH is needed
 			OPAC.call("PING", null, function(err, result) {
+				if (!err || isErrCode(err, ERRCODE_AUTH)) {
+					document.getElementById("ws_disconnected").style.display = "none";
+					document.getElementById("ws_connected").innerHTML = "Connected";
+					document.getElementById("ws_connected").style.display = "inline";
+				}
 				if (!err) {
 					updateCharts();
 				} else {
@@ -788,14 +804,9 @@ function connect2(url, pass) {
 		}
 	}
 	websock.onclose = function(msg) {
-		document.getElementById("ws_connected").style.display = "none";
-		document.getElementById("ws_disconnected").style.display = "inline";
-		disableButtons(true);
-		if (OPAC) {
-			OPAC.onClose();
+		if (WSCONN === websock) {
+			closeClient();
 		}
-		clearTimeout(GTIMEOUT);
-		OPAC = null;
 	}
 }
 
