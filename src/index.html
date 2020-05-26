@@ -679,41 +679,6 @@ function sendScript(script, keysStr, argsStr) {
 	});
 }
 
-/*
-function encodeRespStr(value) {
-	return "+" + value + "\r\n"
-}
-
-function encodeResp(value) {
-	console.log("encode " + value);
-	switch (typeof value) {
-		case "string":
-			if (value.indexOf("\r") == -1 && value.indexOf("\n") == -1) {
-				return "+" + value + "\r\n";
-			}
-			return "$" + value.length + value + "\r\n"
-		case "number":
-			return ":" + value + "\r\n";
-		case "object":
-			if (!value) {
-				alert("TODO: handle null in RESP");
-				return "null";
-			}
-			if (Object.prototype.toString.apply(value) === "[object Array]") {
-				partial = [];
-				// array
-				length = value.length;
-				for (i = 0; i < length; i += 1) {
-					partial[i] = encodeResp(value[i]);
-				}
-				return "*" + value.length + "\r\n" + partial.join("");
-			} else {
-				alert("unknown type");
-			}
-	}
-}
-*/
-
 function OpaWebsocketWriter(ws) {
 	this.ws = ws;
 }
