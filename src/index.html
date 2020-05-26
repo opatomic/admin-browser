@@ -495,13 +495,13 @@ function findTokenEnd(str, idx) {
 }
 
 function convertStr(str) {
-	if (/*str == "U" ||*/ str == "undefined") {
+	if (str == "undefined") {
 		return undefined;
-	} else if (/*str == "N" ||*/ str == "null") {
+	} else if (str == "null") {
 		return null;
-	} else if (/*str == "F" ||*/ str == "false") {
+	} else if (str == "false") {
 		return false;
-	} else if (/*str == "T" ||*/ str == "true") {
+	} else if (str == "true") {
 		return true;
 	} else if (str == "SORTMAX") {
 		return Opatomic.OpaDef.SORTMAX_OBJ;
