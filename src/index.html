@@ -651,6 +651,7 @@ function parseAndSend(cmdString) {
 			}
 			sendLine(line, callTime);
 		}
+		OPAC.flush();
 	} catch (e) {
 		if (console) {
 			console.log(e);
