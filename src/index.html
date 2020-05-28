@@ -856,7 +856,7 @@ function runTestCases() {
 function changeTimerLen() {
 	var newVal = prompt("Refresh every ___ milliseconds", GTIMERLEN.toString());
 	newVal = parseInt(newVal);
-	if (Number.isInteger(newVal) && Number.isFinite(newVal) && !Number.isNaN(newVal)) {
+	if (Number.isInteger(newVal)) {
 		GTIMERLEN = newVal;
 		document.getElementById("timerLen").textContent = GTIMERLEN.toString();
 	}
