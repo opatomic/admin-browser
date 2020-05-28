@@ -710,7 +710,10 @@ function connect2(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
 		for (var cid in GCHARTS) {
-			GCHARTS[cid].data.datasets[0].data.fill(undefined);
+			var arr = GCHARTS[cid].data.datasets[0].data;
+			for (var i = 0; i < arr.length; ++i) {
+				arr[i] = undefined;
+			}
 		}
 		GBWINLAST = undefined;
 		GBWOUTLAST = undefined;
