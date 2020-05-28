@@ -10,6 +10,10 @@ var OPATESTCASESNEW = [
 	"SDIFF set1 set2", ["a"]
 ];
 
+var testbinBytes = [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef];
+var testbin = new Uint8Array(testbinBytes.length);
+testbin.set(testbinBytes);
+
 var OPATESTCASES = [
 	"ECHO hello", "hello",
 
@@ -192,13 +196,14 @@ var OPATESTCASES = [
 	// TODO: MKEYS with range arguments
 	"DEL m1", 1,
 
-	"BAPPEND b1 ~base640123456789abcdef", 12,
-	"BGETRANGE b1 0 -1", buffFromBase64("0123456789abcdef"),
-	"BAPPEND b1 ~base640123456789abcdef", 24,
-	"BGETRANGE b1 0 -1", buffFromBase64("0123456789abcdef0123456789abcdef"),
-	"BAPPEND b1 ~base640123456789abcdef", 36,
-	"BAPPEND b1 ~base640123456789abcdef", 48,
-	"BAPPEND b1 ~base640123456789abcdef", 60,
+	"BAPPEND b1 " + Opatomic.stringify(testbin), testbin.length,
+	"BGETRANGE b1 0 -1", testbin,
+	"BAPPEND b1 " + Opatomic.stringify(testbin), testbin.length * 2,
+	"BGETRANGE b1 0 " + (testbin.length - 1), testbin,
+	"BGETRANGE b1 " + testbin.length + " " + " -1", testbin,
+	"BAPPEND b1 " + Opatomic.stringify(testbin), testbin.length * 3,
+	"BAPPEND b1 " + Opatomic.stringify(testbin), testbin.length * 4,
+	"BAPPEND b1 " + Opatomic.stringify(testbin), testbin.length * 5,
 	"DEL b1", 1,
 
 	"BATCH [INCR exp1] [INCR exp1] [PEXPIRE NONE 2000] [PEXPIRE exp1 2000] [PEXPIRE exp1 1000]", [1,2,0,1,1],
@@ -242,10 +247,6 @@ P.toByteArray = function() {
 }
 
 
-
-function buffFromBase64(str) {
-	return Uint8Array.from(atob(str), c => c.charCodeAt(0));
-}
 
 function opaCompare(o1, o2) {
 	var t1 = Opatomic.opaType(o1);

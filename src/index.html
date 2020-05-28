@@ -423,6 +423,11 @@ function isdigit(ch) {
 	return ch <= 0x39 && ch >= 0x30;
 }
 
+function isalphanum(ch) {
+	// a=97 z=122 A=65 Z=90
+	return (ch >= 97 && ch <= 122) || (ch >= 65 && ch <= 90) || (isdigit(ch));
+}
+
 function isNumStr(s) {
 	// first char must be '-' or digit; if first is '-' then 2nd must be digit
 	var ch = s.charCodeAt(0);
@@ -463,13 +468,14 @@ function isNumStr(s) {
 	return true;
 }
 
-function findQuoteEnd(str, idx) {
+function findQuoteEnd(str, idx, chToFind) {
 	for (; idx < str.length; ++idx) {
-		var ch = str.charAt(idx);
-		if (ch == "\\") {
+		var ch = str.charCodeAt(idx);
+		// 92 is backslash character '\'
+		if (ch == 92) {
 			++idx;
 			continue;
-		} else if (ch == "\"") {
+		} else if (ch == chToFind) {
 			++idx;
 			break;
 		}
@@ -477,24 +483,114 @@ function findQuoteEnd(str, idx) {
 	return idx;
 }
 
-function findTokenEnd(str, idx) {
-	for (; idx < str.length; ++idx) {
-		var ch = str.charAt(idx);
-		if (ch == "\\") {
-			if (idx + 1 >= str.length) {
+function getHexChar1(ch) {
+	if (isdigit(ch)) {
+		return ch - 48;
+	} else if (ch >= 97 && ch <= 122) {
+		return ch - 87;
+	} else if (ch <= 90 && ch >= 65) {
+		return ch - 55;
+	}
+	throw "invalid escape sequence";
+}
+
+function getHexChar4(str, i) {
+	var uchar = getHexChar1(str[i++]);
+	uchar = uchar << 4 | getHexChar1(str[i++]);
+	uchar = uchar << 4 | getHexChar1(str[i++]);
+	uchar = uchar << 4 | getHexChar1(str[i]);
+	return uchar;
+}
+
+function isValidEscapeChar(ch) {
+	if (isalphanum(ch)) {
+		// b=98 f=102 n=110 r=114 t=116 u=117 x=120
+		return ch == 98 || ch == 102 || ch == 110 || ch == 114 || ch == 116 || ch == 117 || ch == 120;
+	} else if (ch <= 20) {
+		// can escape space but not other control chars
+		return ch == 10 || ch == 13 || ch == 9 || ch == 20;
+	} else {
+		return ch != 0x7f;
+	}
+}
+
+function convEscapedStr(str) {
+	str = (new TextEncoder("utf-8")).encode(str);
+	var out = new Uint8Array(str.length);
+	var pos = 0;
+	for (var i = 0; i < str.length; ++i) {
+		var ch = str[i];
+		// check whether character is escape backslash \ (ascii code 92)
+		if (ch == 92) {
+			++i;
+			if (i >= str.length || !isValidEscapeChar(str[i])) {
 				throw "invalid escape sequence";
 			}
-			idx++;
-			continue;
-		}
-		if (iswhite(str.charCodeAt(idx)) || ch == "," || ch == "[" || ch == "]" || ch == "\"" || ch == "{" || ch == "}") {
-			break;
+			ch = String.fromCharCode(str[i]);
+			if (ch == "x") {
+				if (i + 2 >= str.length) {
+					throw "invalid escape sequence";
+				}
+				out[pos++] = (getHexChar1(str[i + 1]) << 4) | getHexChar1(str[i + 2]);
+				i += 2;
+			} else if (ch == "u") {
+				if (i + 4 >= str.length) {
+					throw "invalid escape sequence";
+				}
+				var uchar = getHexChar4(str, i + 1);
+				i += 4;
+				if (uchar < 0x80) {
+					out[pos++] = uchar & 0xFF;
+				} else if (uchar < 0x0800) {
+					out[pos++] = 0xC0 | ((uchar >> 6) & 0x1F);
+					out[pos++] = 0x80 | (uchar & 0x3F);
+				} else if (uchar < 0xD800 || uchar > 0xDFFF) {
+					out[pos++] = 0xE0 | ((uchar >> 12) & 0x0F);
+					out[pos++] = 0x80 | ((uchar >> 6) & 0x3F);
+					out[pos++] = 0x80 | (uchar & 0x3F);
+				} else {
+					// surrogate pair
+					if (uchar >= 0xDC00 || i + 6 >= str.length || str[++i] != 92 || str[++i] != 117) {
+						throw "invalid surrogate pair";
+					}
+					var uchar2 = getHexChar4(str, i + 1);
+					if (uchar2 < 0xDC00 || uchar2 > 0xDFFF) {
+						throw "invalid surrogate pair";
+					}
+					i += 4;
+					var code = (((uchar & 0x3FF) << 10) | (uchar2 & 0x3FF)) + 0x10000;
+					out[pos++] = 0xF0 | (code >> 18);
+					out[pos++] = 0x80 | ((code >> 12) & 0x3F);
+					out[pos++] = 0x80 | ((code >> 6) & 0x3F);
+					out[pos++] = 0x80 | (code & 0x3F);
+				}
+			} else if (ch == "n") {
+				out[pos++] = 10;
+			} else if (ch == "r") {
+				out[pos++] = 13;
+			} else if (ch == "t") {
+				out[pos++] = 9;
+			} else if (ch == "b") {
+				out[pos++] = 8;
+			} else if (ch == "f") {
+				out[pos++] = 12;
+			} else {
+				out[pos++] = str[i];
+			}
+		} else {
+			out[pos++] = ch;
 		}
 	}
-	return idx;
+	return pos > 0 ? out.subarray(0, pos) : out;
 }
 
-function convertStr(str) {
+function unescapeStr(str, isBin) {
+	// the value returned here may not be valid utf-8 (from \x escape sequences)
+	var bytes = convEscapedStr(str);
+	return isBin ? bytes : (new TextDecoder()).decode(bytes);
+}
+
+function convertUserToken(str, args) {
 	if (str == "undefined") {
 		return undefined;
 	} else if (str == "null") {
@@ -509,40 +605,57 @@ function convertStr(str) {
 		return str;
 	} else if (isNumStr(str)) {
 		return new Opatomic.BigDec(str);
+	} else {
+		return unescapeStr(str, false);
 	}
-	return str;
 }
 
-function checkEscapedString(str) {
-	if (str && (typeof str == "string") && str.charAt(0) == "~") {
-		if (str.charAt(1) == "~") {
-			return str.substring(1);
-		}
-		if (str.substring(0, 7) == "~base64") {
-			return buffFromBase64(str.substring(7));
-		}
-		if (str.substring(0, 4) == "~bin") {
-			// TODO: check to make sure all chars are >= 32 && < 127 ?
-			return (new TextEncoder("utf-8")).encode(str.substring(4));
+function findTokenEnd(str, idx) {
+	while (idx < str.length) {
+		var ch = str.charCodeAt(idx);
+		//  isalphanum(ch) || ch > 0x7f || ch == '_' || ch == '.' || ch == '-' || ch == '+'
+		if (isalphanum(ch) || ch > 0x7f || ch == 95  || ch == 46  || ch == 45  || ch == 43) {
+			++idx;
+		} else if (ch == 92 && idx + 1 < str.length) {
+			idx += 2;
+		} else {
+			return idx;
 		}
 	}
-	return str;
+	return idx;
 }
 
 function parseArgs2(str, idx, args, stopAtArrayEnd) {
 	while (idx < str.length) {
 		switch (str.charAt(idx)) {
 			case "\"":
-				var strEnd = findQuoteEnd(str, idx + 1);
+			case "'":
+				var strEnd = findQuoteEnd(str, idx + 1, str.charCodeAt(idx));
 				if (strEnd < idx + 2 || (stopAtArrayEnd && strEnd >= str.length)) {
 					throw "string end quote not found";
 				}
-				args.push(checkEscapedString(JSON.parse(str.substring(idx, strEnd))));
+				args.push(unescapeStr(str.substring(idx + 1, strEnd - 1), str.charAt(idx) == "'"));
 				idx = strEnd;
 				break;
-			case "{":
-			case "}":
-				throw "object tokens '{' and '}' not supported";
+			case "/":
+				if (idx + 1 < str.length) {
+					if (str.charAt(idx + 1) == "/") {
+						idx = str.indexOf("\n", idx);
+						if (idx < 0) {
+							idx = str.length;
+						}
+						continue;
+					} else if (str.charAt(idx + 1) == "*") {
+						idx = str.indexOf("*/", idx);
+						if (idx < 0) {
+							throw "end of comment \"*/\" not found";
+						}
+						idx += 2;
+						continue;
+					}
+				}
+				throw "the / character must be inside quotes, escaped, or used as comment";
+				break;
 			case "[":
 				var subarray = [];
 				idx = parseArgs2(str, idx + 1, subarray, true);
@@ -563,11 +676,10 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 				break;
 			default:
 				var strEnd = findTokenEnd(str, idx);
-				var tokObj = convertStr(str.substring(idx, strEnd));
-				if (typeof tokObj == "string") {
-					tokObj = checkEscapedString(JSON.parse('"' + tokObj + '"'));
+				if (strEnd == idx) {
+					throw "reserved/special/control characters must be inside quotes or escaped";
 				}
-				args.push(tokObj);
+				args.push(convertUserToken(str.substring(idx, strEnd)));
 				idx = strEnd;
 				break;
 		}
@@ -944,7 +1056,7 @@ function escEntities(s) {
 <form id="cmdForm" onsubmit="parseAndSend(document.getElementById('cmdInput').value);return false;">
 <textarea id="cmdInput" rows="10" cols="80" onkeydown="cmdStrKey(event,this);">ECHO [undefined null false true SORTMAX]
 ECHO [-123, 0 0.123 4e11]
-ECHO [~binhello "hello" "123" "2.45" ["subarray" ["subsubarray"]]]
+ECHO ['hello' "hello" "123" "2.45" ["subarray" ["subsubarray"]]]
 INFO
 </textarea>
 <input type="submit" value="Run" id="cmdButton" disabled="disabled"/>
