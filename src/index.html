@@ -684,7 +684,7 @@ function OpaWebsocketWriter(ws) {
 	this.ws = ws;
 }
 OpaWebsocketWriter.prototype.write = function(b) {
-	this.ws.send(b);
+	this.ws.send(b.buffer.slice(b.byteOffset, b.byteLength + b.byteOffset));
 }
 
 function disableButtons(disabled) {
