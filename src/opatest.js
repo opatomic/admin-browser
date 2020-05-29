@@ -267,8 +267,8 @@ function opaCompare(o1, o2) {
 		case 'boolean':
 			if (t2 == 'undefined' || t2 == 'null') {
 				return 1;
-			} else if (t2 == 'boolean' && t1 === t2) {
-				return 0;
+			} else if (t2 == 'boolean') {
+				return o1 === o2 ? 0 : (o2 ? -1 : 1);
 			}
 			return -1;
 		case 'number':
