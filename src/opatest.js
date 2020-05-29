@@ -294,15 +294,13 @@ function opaCompare(o1, o2) {
 			return -1;
 		case 'Uint8Array':
 			if (t2 == 'Uint8Array') {
-				var dv1 = new DataView(o1.buffer, o1.byteOffset, o1.byteLength);
-				var dv2 = new DataView(o2.buffer, o2.byteOffset, o2.byteLength);
-				var minLen = o1.byteLength < o2.byteLength ? o1.byteLength : o2.byteLength;
+				var minLen = Math.min(o1.byteLength, o2.byteLength);
 				for (var i = 0; i < minLen; ++i) {
-					if (dv1.getUint8(i) !== dv2.getUint8(i)) {
-						return dv1.getUint8(i) < dv2.getUint8(i) ? -1 : 1;
+					if (o1[i] !== o2[i]) {
+						return o1[i] < o2[i] ? -1 : 1;
 					}
 				}
-				return o1.byteLength == o2.byteLength ? 0 : (o1.byteLength < o2.byteLength ? -1 : 1);
+				return o1.byteLength - o2.byteLength;
 			} else if (t2 == 'string' || t2 == 'Array') {
 				return -1;
 			}
