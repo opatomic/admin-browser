@@ -818,6 +818,12 @@ function closeClient() {
 	}
 }
 
+function setStatusConnected() {
+	document.getElementById("ws_disconnected").style.display = "none";
+	document.getElementById("ws_connected").innerHTML = "Connected";
+	document.getElementById("ws_connected").style.display = "inline";
+}
+
 function connect2(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
@@ -849,6 +855,9 @@ function connect2(url, pass) {
 		disableButtons(false);
 		if (pass && pass != "") {
 			OPAC.call("AUTH", [pass], function(err, result) {
+				if (!err || isErrCode(err, ERRCODE_AUTH)) {
+					setStatusConnected();
+				}
 				if (!err) {
 					updateCharts();
 				} else {
@@ -862,9 +871,7 @@ function connect2(url, pass) {
 			// PING to determine whether AUTH is needed
 			OPAC.call("PING", null, function(err, result) {
 				if (!err || isErrCode(err, ERRCODE_AUTH)) {
-					document.getElementById("ws_disconnected").style.display = "none";
-					document.getElementById("ws_connected").innerHTML = "Connected";
-					document.getElementById("ws_connected").style.display = "inline";
+					setStatusConnected();
 				}
 				if (!err) {
 					updateCharts();
