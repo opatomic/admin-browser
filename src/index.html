@@ -228,7 +228,9 @@ function addChartPoint(chartName, val) {
 }
 
 function prettySize(size) {
-	if (size >= 1073741824) {
+	if (size >= 1099511627776) {
+		return (Math.round(size / 1099511627776 * 100) / 100) + " TB";
+	} else if (size >= 1073741824) {
 		return (Math.round(size / 1073741824 * 100) / 100) + " GB";
 	} else if (size >= 1048576) {
 		return (Math.round(size / 1048576 * 100) / 100) + " MB";
@@ -240,7 +242,11 @@ function prettySize(size) {
 }
 
 function prettyNum(size) {
-	if (size >= 1000000) {
+	if (size >= 1000000000000) {
+		return (Math.round(size / 1000000000000 * 10) / 10) + "T";
+	} else if (size >= 1000000000) {
+		return (Math.round(size / 1000000000 * 10) / 10) + "G";
+	} else if (size >= 1000000) {
 		return (Math.round(size / 1000000 * 10) / 10) + "M";
 	} else if (size >= 1000) {
 		return (Math.round(size / 1000 * 10) / 10) + "K";
