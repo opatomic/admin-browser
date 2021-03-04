@@ -5,7 +5,8 @@
 <title>Opatomic Admin Tool</title>
 
 <script type="text/javascript" src="polyfill.js"></script>
-<script type="text/javascript" src="chart/chart.min.js"></script>
+<link rel="stylesheet" href="uplot/uPlot.min.css">
+<script type="text/javascript" src="uplot/uPlot.iife.min.js"></script>
 
 <script type="text/javascript" src="opac.browser.min.js"></script>
 <script type="text/javascript" src="opatest.js"></script>
@@ -106,48 +107,75 @@ var LUAEDITOR;
 
 
 
-function newChart(id, label, numPoints, color) {
-	var ctx = document.getElementById(id).getContext("2d");
-	var c = new Chart(ctx, {
-		type: "line",
-		data: {
-			labels: new Array(numPoints),
-			datasets: [
-				{
-					label: label,
-					data: new Array(numPoints),
-					pointRadius: 0,
-					fill: false,
-					borderColor: color,
-					borderWidth: 1
-				}
-			]
-		},
-		options: {
-			scales: {
-				xAxes: [{
-					display: false
-				}],
-				yAxes: [{
-					ticks: {
-						beginAtZero:true,
-						callback: function (value, index, values) {
-							return prettyNum(value);
-						}
-					}
-				}]
-			},
-			tooltips: {enabled: false},
-			hover: {mode: null}
+function chartSplits(scaleMax) {
+	var e = parseFloat(scaleMax).toExponential();
+	var epos = e.indexOf("e");
+	var c = parseFloat(e.substring(0, epos));
+	e = parseInt(e.substring(epos + 2)) - 1;
+	e = Math.pow(10, e);
+	c *= 10;
+	c = Math.ceil(c);
+	var div = 0;
+	while (div == 0) {
+		if ((c % 3) == 0) {
+			div = 3;
+		} else if ((c % 4) == 0) {
+			div = 4;
+		} else if (c % 5 == 0) {
+			div = 5;
+		} else {
+			++c;
 		}
-	});
-	GCHARTS[id] = c;
-	return c;
+	}
+	var splits = [0];
+	for (var i = 1; i <= div; ++i) {
+		var v = parseFloat(c / div * i)*100/100 * e;
+		splits.push(v);
+	}
+	return splits;
+}
+
+function newChart(id, label, numPoints, color) {
+	var data = [
+		new Array(numPoints),
+		new Array(numPoints),
+	];
+	for (var i = 0; i < numPoints; ++i) {
+		data[0][i] = i;
+		data[1][i] = 0;
+	}
+
+	var opts = {
+		title: label,
+		width: 300,
+		height: 150,
+		legend: {show:false},
+		cursor: {show:false},
+		axes:[
+			{show:false,grid:{show:false}},
+			{
+				values: (self, ticks) => ticks.map(rawValue => prettyNum(rawValue)),
+				splits: (self, axisIdx, scaleMin, scaleMax, foundIncr, pctSpace) => chartSplits(scaleMax)
+			}
+		],
+		scales: {
+			x: {time: false},
+			y: {
+				range: (self, dataMin, dataMax) => [0,dataMax]
+			}
+		},
+		series: [{}, {stroke: color}],
+	};
+	var c = new uPlot(opts, data, document.getElementById(id));
+	GCHARTS[id] = {
+		'data': data,
+		'chart': c
+	};
 }
 
 function initCharts() {
-	// note: degrade gracefully if Chart.js source is unavailable (simply do not show charts)
-	if (typeof Chart !== 'undefined') {
+	// note: degrade gracefully if charting source is unavailable (simply do not show charts)
+	if (typeof uPlot !== 'undefined') {
 		newChart("netrecvChart", "net.recv", 120, "blue");
 		newChart("netsentChart", "net.sent", 120, "blue");
 		newChart("latencyChart", "latency (ms)", 120, "blue");
@@ -218,11 +246,11 @@ function addChartPoint(chartName, val) {
 	var tabVisible = document.getElementById("tab3").checked;
 	var chart = GCHARTS[chartName];
 	if (chart) {
-		var data = chart.data.datasets[0].data;
+		var data = chart.data[1];
 		data.push(val);
 		data.shift();
 		if (tabVisible) {
-			chart.update(0);
+			chart.chart.setData(chart.data);
 		}
 	}
 }
@@ -841,9 +869,9 @@ function connect2(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
 		for (var cid in GCHARTS) {
-			var arr = GCHARTS[cid].data.datasets[0].data;
-			for (var i = 0; i < arr.length; ++i) {
-				arr[i] = undefined;
+			var arr = GCHARTS[cid].data;
+			for (var i = 0; i < arr[1].length; ++i) {
+				arr[1][i] = 0;
 			}
 		}
 		GBWINLAST = undefined;
@@ -1108,15 +1136,15 @@ INFO
 <table id="sysInfoTable"></table>
 <table id="sysCharts">
 <tr>
-	<td><canvas id="netrecvChart"></canvas></td>
-	<td><canvas id="netsentChart"></canvas></td>
+	<td><div id="netrecvChart"></div></td>
+	<td><div id="netsentChart"></div></td>
 </tr>
 <tr>
-	<td><canvas id="latencyChart"></canvas></td>
-	<td><canvas id="heapChart"></canvas></td>
+	<td><div id="latencyChart"></div></td>
+	<td><div id="heapChart"></div></td>
 </tr>
 <tr>
-	<td><canvas id="dbszChart"></canvas></td>
+	<td><div id="dbszChart"></div></td>
 	<td></td>
 </tr>
 </table>
@@ -1168,7 +1196,7 @@ You can use node.js + <a href="https://github.com/opatomic/tcpviaws-js">tcpviaws
 		<li><a href="http://www-cs-students.stanford.edu/~tjw/jsbn/">jsbn</a> (<a href="licenses/jsbn-license">license</a>)</li>
 	</ul>
 	</li>
-	<li><a href="https://github.com/chartjs/Chart.js">Chart.js</a> (<a href="chart/LICENSE">license</a>)</li>
+	<li><a href="https://github.com/leeoniya/uPlot">uPlot</a> (<a href="uplot/LICENSE">license</a>)</li>
 	<li><a href="https://github.com/ajaxorg/ace">Ace Editor</a> <span id="acejsVer"></span> (<a href="ace-min-noconflict/LICENSE">license</a>)</li>
 	<li><a href="https://github.com/ttaubert/node-arraybuffer-slice">ArrayBuffer.slice() polyfill</a> (<a href="licenses/arraybuffer-slice-license">license</a>)</li>
 	<li><a href="https://github.com/anonyco/FastestSmallestTextEncoderDecoder">Text Encoder/Decoder polyfill</a> (<a href="licenses/textencdec-license">license</a>)</li>
