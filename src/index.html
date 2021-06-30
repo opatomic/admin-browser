@@ -121,16 +121,16 @@ function chartSplits(scaleMax) {
 			div = 3;
 		} else if ((c % 4) == 0) {
 			div = 4;
-		} else if (c % 5 == 0) {
+		} else if ((c % 5) == 0) {
 			div = 5;
 		} else {
 			++c;
 		}
 	}
 	var splits = [0];
+	var splitSize = c/div*e;
 	for (var i = 1; i <= div; ++i) {
-		var v = parseFloat(c / div * i)*100/100 * e;
-		splits.push(v);
+		splits.push(splitSize * i);
 	}
 	return splits;
 }
