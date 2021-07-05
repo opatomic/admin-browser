@@ -92,6 +92,7 @@ This resizes the tabs when screen is small TODO: rethink this for mobile devices
 
 var WSCONN;
 var OPAC;
+var SUBS = {};
 var ERRCODE_AUTH = -53;
 
 var GTIMERLEN = 200;
@@ -737,8 +738,8 @@ function parseArgs(str) {
 	return a;
 }
 
-function showSubMsg(ch, msg) {
-	var msgtext = escEntities(Opatomic.stringify(ch)) + " : " + prettyResponse(msg, null);
+function showSubMsg(msg) {
+	var msgtext = prettyResponse(msg, null);
 	var el = document.getElementById("pubsubMessages");
 	el.innerHTML += msgtext + "\n";
 }
@@ -751,19 +752,36 @@ function isClosedErr(errResponse) {
 	return isErrCode(errResponse, Opatomic.OpaDef.ERR_CLOSED);
 }
 
+function subscribe2(chans) {
+	document.getElementById("pubsubMessages").innerHTML = "";
+	SUBS.chans = chans;
+	OPAC.call("SUBSCRIBE", chans);
+}
+
 function subscribe(userTypedStr) {
-	var args = parseArgs(userTypedStr);
-	var channel = args[0];
-	OPAC.callAP("SUBSCRIBE", args, function(err, result) {
-		if (err) {
-			if (console && !isClosedErr(err)) {
-				console.log("error received in sub callback: " + err);
+	if (!SUBS.id) {
+		SUBS.id = "_pubsub";
+		OPAC.registerCB(SUBS.id, function(err, result) {
+			if (err) {
+				if (console && !isClosedErr(err)) {
+					console.log("error received in sub callback: " + Opatomic.stringify(err));
+				}
+				//TODO: show error
+			} else {
+				showSubMsg(result);
 			}
-			//TODO: show error
-		} else {
-			showSubMsg(channel, result);
-		}
-	});
+		});
+	}
+	var chans = parseArgs(userTypedStr);
+	if (SUBS.chans) {
+		// TODO: status messages indicating progress of each op
+		OPAC.call("PUNSUBSCRIBE");
+		OPAC.call("UNSUBSCRIBE", null, function(err, result) {
+			subscribe2(chans);
+		});
+	} else {
+		subscribe2(chans);
+	}
 }
 
 function sendCommand(cmdString, cb) {
@@ -890,6 +908,7 @@ function connect2(url, pass) {
 	}
 	document.getElementById("ws_disconnected").innerHTML = "Connecting...";
 	OPAC = new Opatomic.EventClient(new OpaWebsocketWriter(websock));
+	SUBS = {};
 	WSCONN = websock;
 	websock.onopen = function(msg) {
 		document.getElementById("pubsubMessages").innerHTML = "";
