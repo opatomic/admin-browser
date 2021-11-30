@@ -91,6 +91,7 @@ This resizes the tabs when screen is small TODO: rethink this for mobile devices
 <script type="text/javascript">
 
 var WSCONN;
+var RECONNECT = {};
 var OPAC;
 var SUBS = {};
 var ERRCODE_AUTH = -53;
@@ -217,6 +218,7 @@ function initPage() {
 	disableButtons(true);
 	initCharts();
 
+	RECONNECT.doit = document.getElementById("reconnectCheckbox").checked;
 	document.getElementById("timerLen").textContent = GTIMERLEN.toString();
 	document.getElementById("opacjsVer").textContent = "v" + Opatomic.version;
 
@@ -865,6 +867,19 @@ function disableButtons(disabled) {
 	}
 }
 
+function reconnectIfNeeded() {
+	if (!RECONNECT.doit || !RECONNECT.url) {
+		return;
+	}
+	console.log("reconnecting");
+	// TODO: this will log an error to console every time it fails; no clue how to prevent this
+	//   "Firefox can’t establish a connection to the server at ws://localhost:8080/."
+	connect(RECONNECT.url, RECONNECT.pass);
+	if (!WSCONN) {
+		RECONNECT.timeout = setTimeout(reconnect, 1000);
+	}
+}
+
 function closeClient() {
 	document.getElementById("ws_connected").style.display = "none";
 	document.getElementById("ws_disconnected").style.display = "inline";
@@ -874,6 +889,9 @@ function closeClient() {
 	if (OPAC) {
 		OPAC.onClose();
 		OPAC = null;
+	}
+	if (RECONNECT.timeout) {
+		clearTimeout(RECONNECT.timeout);
 	}
 }
 
@@ -913,6 +931,8 @@ function connect2(url, pass) {
 	websock.onopen = function(msg) {
 		document.getElementById("pubsubMessages").innerHTML = "";
 		disableButtons(false);
+		RECONNECT.url = url;
+		RECONNECT.pass = pass;
 		if (pass && pass != "") {
 			OPAC.call("AUTH", [pass], function(err, result) {
 				if (!err || isErrCode(err, ERRCODE_AUTH)) {
@@ -954,6 +974,7 @@ function connect2(url, pass) {
 	websock.onclose = function(msg) {
 		if (WSCONN === websock) {
 			closeClient();
+			reconnectIfNeeded();
 		}
 	}
 }
@@ -972,6 +993,8 @@ function connect(url, pass) {
 }
 
 function disconnect() {
+	RECONNECT.url = null;
+	RECONNECT.pass = null;
 	if (WSCONN) {
 		WSCONN.close();
 	}
@@ -1081,6 +1104,7 @@ function escEntities(s) {
 	<br/>
 	<input type="submit" value="Connect"/>
 	<button onclick="disconnect();return false;" id="disconnectButton" disabled="disabled">Disconnect</button>
+	<input type="checkbox" id="reconnectCheckbox" checked onclick="RECONNECT.doit=document.getElementById('reconnectCheckbox').checked;"/><label for="reconnectCheckbox"> reconnect</label>
 	<span id="ws_connected" style="display:none;color:green;">Connected</span>
 	<span id="ws_disconnected" style="color:red;">Disconnected</span>
 	</form>
