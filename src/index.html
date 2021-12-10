@@ -6,7 +6,6 @@
 
 <script type="text/javascript" src="polyfill.js"></script>
 <link rel="stylesheet" href="uplot/uPlot.min.css">
-<script type="text/javascript" src="uplot/uPlot.iife.min.js"></script>
 
 <script type="text/javascript" src="opac.browser.min.js"></script>
 <script type="text/javascript" src="opatest.js"></script>
@@ -104,6 +103,7 @@ var GSTATSTIME;
 var GTIMEOUT;
 
 var ACELOADED = false;
+var UPLOTLOADED = false;
 var LUAEDITOR;
 
 
@@ -156,14 +156,14 @@ function newChart(id, label, numPoints, color) {
 		axes:[
 			{show:false,grid:{show:false}},
 			{
-				values: (self, ticks) => ticks.map(rawValue => prettyNum(rawValue)),
-				splits: (self, axisIdx, scaleMin, scaleMax, foundIncr, pctSpace) => chartSplits(scaleMax)
+				values: function(self, ticks) {return ticks.map(function(rawValue){return prettyNum(rawValue);})},
+				splits: function(self, axisIdx, scaleMin, scaleMax, foundIncr, pctSpace) {return chartSplits(scaleMax);}
 			}
 		],
 		scales: {
 			x: {time: false},
 			y: {
-				range: (self, dataMin, dataMax) => [0,dataMax]
+				range: function(self, dataMin, dataMax) { return [0,dataMax]; }
 			}
 		},
 		series: [{}, {stroke: color}],
@@ -175,17 +175,46 @@ function newChart(id, label, numPoints, color) {
 	};
 }
 
-function initCharts() {
-	// note: degrade gracefully if charting source is unavailable (simply do not show charts)
-	if (typeof uPlot !== 'undefined') {
-		newChart("netrecvChart", "net.recv", 120, "blue");
-		newChart("netsentChart", "net.sent", 120, "blue");
-		newChart("latencyChart", "latency (ms)", 120, "blue");
-		newChart("heapChart", "heap", 120, "blue");
-		newChart("dbszChart", "DB size", 120, "blue");
-	} else {
-		// TODO: show error message where charts should be
+function uplotSupported() {
+	var w = window;
+	function hop(o, p) {
+		return o.hasOwnProperty(p);
 	}
+	if (!hop(w, "Path2D") || !hop(w, "Promise") || !hop(w, "devicePixelRatio") || !hop(w, "Intl") || !hop(w, "Map")){
+		return false;
+	}
+	if (!hop(Math, "log10") || !hop(Math, "log2") || !hop(Array.prototype, "find")){
+		return false;
+	}
+	// TODO: this is not a complete check for the Intl components needed
+	if (!hop(Intl, "NumberFormat") || !hop(Intl, "DateTimeFormat")){
+		return false;
+	}
+	// TODO: check for setLineDash()
+	return true;
+}
+
+function initCharts() {
+	if (UPLOTLOADED) {
+		return;
+	}
+	if (!uplotSupported()) {
+		var el = document.getElementById("netrecvChart");
+		if (el) {
+			el.textContent = "Your browser does not support uPlot. Graphs are disabled.";
+		}
+		return;
+	}
+	loadScript("uplot/uPlot.iife.min.js", function() {
+		if (typeof uPlot !== 'undefined') {
+			newChart("netrecvChart", "net.recv", 120, "blue");
+			newChart("netsentChart", "net.sent", 120, "blue");
+			newChart("latencyChart", "latency (ms)", 120, "blue");
+			newChart("heapChart", "heap", 120, "blue");
+			newChart("dbszChart", "DB size", 120, "blue");
+			UPLOTLOADED = true;
+		}
+	});
 }
 
 function loadScript(url, onload) {

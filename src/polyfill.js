@@ -16,6 +16,22 @@
 	polyfill(Number, "isSafeInteger", function(v) {
 		return Number.isInteger(v) && v >= Number.MIN_SAFE_INTEGER && v <= Number.MAX_SAFE_INTEGER;
 	});
+
+	// polyfill for uPlot
+	// https://github.com/leeoniya/uPlot/issues/538
+	var oMatchMedia = window.matchMedia;
+	window.matchMedia = function(query) {
+		var mql = oMatchMedia(query);
+		if (!mql.addEventListener) {
+			mql.addEventListener = function(evName, handler) {
+				mql.addListener(handler);
+			};
+			mql.removeEventListener = function(evName, handler) {
+				mql.removeListener(handler);
+			};
+		}
+		return mql;
+	};
 })();
 
 // https://github.com/ttaubert/node-arraybuffer-slice
