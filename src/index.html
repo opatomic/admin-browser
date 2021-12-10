@@ -1133,7 +1133,7 @@ function escEntities(s) {
 	<br/>
 	<input type="submit" value="Connect"/>
 	<button onclick="disconnect();return false;" id="disconnectButton" disabled="disabled">Disconnect</button>
-	<input type="checkbox" id="reconnectCheckbox" checked onclick="RECONNECT.doit=document.getElementById('reconnectCheckbox').checked;"/><label for="reconnectCheckbox"> reconnect</label>
+	<input type="checkbox" id="reconnectCheckbox" onclick="RECONNECT.doit=document.getElementById('reconnectCheckbox').checked;"/><label for="reconnectCheckbox"> reconnect</label>
 	<span id="ws_connected" style="display:none;color:green;">Connected</span>
 	<span id="ws_disconnected" style="color:red;">Disconnected</span>
 	</form>
