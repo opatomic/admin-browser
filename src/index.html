@@ -36,6 +36,7 @@ code.pretty .str  {color:#080}
 code.pretty .blob {color:olive}
 code.pretty .error {color:red}
 
+code.boxed {background-color: #e3e6e8;border-radius: 3px;padding: 2px 4px;font-family:courier new;}
 code.bash {background-color:black;color:#B3B3B3;font-family:Courier New,monospace;display:block;margin:2px 60px 2px 30px;padding:3px;}
 
 textarea{white-space:pre}
@@ -1245,18 +1246,13 @@ INFO
 <section id="tab6Body">
 <h1>Opatomic Admin Tool</h1>
 <br/>
-<p>Since your browser does not have sockets, a websocket proxy is needed to connect to the Opatomic server.
-You can use node.js + <a href="https://github.com/opatomic/tcpviaws-js">tcpviaws</a> to do this.</p>
+<p>Since your browser does not have TCP sockets, a websocket proxy is needed to connect to the Opatomic server.
+The <code class="boxed">opad</code> server includes a websocket proxy that can be used if you add the <code class="boxed">--wsport</code> 
+command line argument when launching.</p>
+<p>Example command:</p>
+<p><code class="boxed">./opad --wsport 8080 --allowresp 1</code></p>
 
-<h3>Setup:</h3>
-<p>
-<ul>
-	<li>Ubuntu setup:<br/><code class="bash">sudo apt-get install nodejs<br/>sudo apt-get install npm<br/>sudo npm install -g tcpviaws</code></li>
-	<li>Windows setup:<br><a href="https://nodejs.org/en/download/">Download</a> and install node. Make sure to also install npm (bundled with installer). Then run:<br/><code class="bash">npm install -g tcpviaws</code></li>
-</ul>
-<h3>Usage</h3>
-<p><code class="bash">tcpviaws 8080 4567</code></p>
-<p>Then connect to <code>ws://localhost:8080/</code> at the top of this page.</p>
+<p>Then connect to <code class="boxed">ws://localhost:8080/</code> at the top of this page.</p>
 <br/>
 
 <hr/>
