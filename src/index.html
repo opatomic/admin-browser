@@ -446,7 +446,7 @@ function prettyResponse2(obj, space, depth) {
 			return '<span class="num">' + Opatomic.stringify(obj) + '</span>';
 		case "Uint8Array":
 		case "Buffer":
-			return '<span class="blob">' + Opatomic.stringify(obj) + '</span>';
+			return '<span class="blob">' + escEntities(Opatomic.stringify(obj)) + '</span>';
 		case "string":
 			return '<span class="str">' + escEntities(Opatomic.stringify(obj)) + '</span>';
 		case "Array":
