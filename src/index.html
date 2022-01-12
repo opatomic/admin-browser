@@ -901,13 +901,32 @@ function reconnectIfNeeded() {
 	if (!RECONNECT.doit || !RECONNECT.url) {
 		return;
 	}
-	console.log("reconnecting");
-	// TODO: this will log an error to console every time it fails; no clue how to prevent this
-	//   "Firefox can’t establish a connection to the server at ws://localhost:8080/."
-	connect(RECONNECT.url, RECONNECT.pass);
-	if (!WSCONN) {
-		RECONNECT.timeout = setTimeout(reconnect, 1000);
-	}
+
+	// TODO: implement a backoff algorithm to reconnect less frequently over time
+
+	//console.log("checking server via XMLHttpRequest");
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			if (this.status == 200) {
+				//console.log("reconnecting websocket");
+				// note: this will log an error to console every time it fails; no clue how to prevent this
+				//   "Firefox can’t establish a connection to the server at ws://localhost:8080/."
+				connect(RECONNECT.url, RECONNECT.pass);
+				if (!WSCONN) {
+					//console.log("websocket reconnect failed");
+					RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
+				}
+			} else {
+				//console.log("XMLHttpRequest failed");
+				RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
+			}
+		}
+	};
+	xhr.timeout = 2000;
+	// TODO: request a smaller page or maybe just HEAD to use less network traffic
+	xhr.open("GET", window.location.pathname);
+	xhr.send();
 }
 
 function closeClient() {
