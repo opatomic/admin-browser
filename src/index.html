@@ -953,6 +953,7 @@ function setStatusConnected() {
 function connect2(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
+		WSCONN = null;
 		for (var cid in GCHARTS) {
 			var arr = GCHARTS[cid].data;
 			for (var i = 0; i < arr[1].length; ++i) {
@@ -1023,7 +1024,8 @@ function connect2(url, pass) {
 	websock.onclose = function(msg) {
 		if (WSCONN === websock) {
 			closeClient();
-			reconnectIfNeeded();
+			clearTimeout(RECONNECT.timeout);
+			RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
 		}
 	}
 }
