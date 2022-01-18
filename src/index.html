@@ -911,7 +911,7 @@ function reconnectIfNeeded() {
 			if (this.status == 200) {
 				//console.log("reconnecting websocket");
 				// note: this will log an error to console every time it fails; no clue how to prevent this
-				//   "Firefox can’t establish a connection to the server at ws://localhost:8080/."
+				//   "Firefox can't establish a connection to the server at ws://localhost:8080/."
 				connect(RECONNECT.url, RECONNECT.pass);
 				if (!WSCONN) {
 					//console.log("websocket reconnect failed");
