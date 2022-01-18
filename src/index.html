@@ -181,14 +181,14 @@ function uplotSupported() {
 	function hop(o, p) {
 		return o.hasOwnProperty(p);
 	}
-	if (!hop(w, "Path2D") || !hop(w, "Promise") || !hop(w, "devicePixelRatio") || !hop(w, "Intl") || !hop(w, "Map")){
+	if (!hop(w, "Path2D") || !hop(w, "Promise") || !hop(w, "devicePixelRatio") || !hop(w, "Intl") || !hop(w, "Map")) {
 		return false;
 	}
-	if (!hop(Math, "log10") || !hop(Math, "log2") || !hop(Array.prototype, "find")){
+	if (!hop(Math, "log10") || !hop(Math, "log2") || !hop(Array.prototype, "find")) {
 		return false;
 	}
 	// TODO: this is not a complete check for the Intl components needed
-	if (!hop(Intl, "NumberFormat") || !hop(Intl, "DateTimeFormat")){
+	if (!hop(Intl, "NumberFormat") || !hop(Intl, "DateTimeFormat")) {
 		return false;
 	}
 	// TODO: check for setLineDash()
