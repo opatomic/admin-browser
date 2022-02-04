@@ -883,11 +883,20 @@ function sendScript(script, keysStr, argsStr) {
 	});
 }
 
+function copyByteArray(b) {
+	if (ArrayBuffer.prototype.slice) {
+		return b.buffer.slice(b.byteOffset, b.byteLength + b.byteOffset)
+	}
+	var cpy = new ArrayBuffer(b.byteLength);
+	new Uint8Array(cpy).set(b);
+	return cpy;
+}
+
 function OpaWebsocketWriter(ws) {
 	this.ws = ws;
 }
 OpaWebsocketWriter.prototype.write = function(b) {
-	this.ws.send(b.buffer.slice(b.byteOffset, b.byteLength + b.byteOffset));
+	this.ws.send(copyByteArray(b));
 }
 
 function disableButtons(disabled) {
@@ -1287,7 +1296,6 @@ command line argument when launching.</p>
 	</li>
 	<li><a href="https://github.com/leeoniya/uPlot">uPlot</a> (<a href="uplot/LICENSE">license</a>)</li>
 	<li><a href="https://github.com/ajaxorg/ace">Ace Editor</a> <span id="acejsVer"></span> (<a href="ace-min-noconflict/LICENSE">license</a>)</li>
-	<li><a href="https://github.com/ttaubert/node-arraybuffer-slice">ArrayBuffer.slice() polyfill</a> (<a href="licenses/arraybuffer-slice-license">license</a>)</li>
 	<li><a href="https://github.com/anonyco/FastestSmallestTextEncoderDecoder">Text Encoder/Decoder polyfill</a> (<a href="licenses/textencdec-license">license</a>)</li>
 </ul>
 
