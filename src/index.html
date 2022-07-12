@@ -884,22 +884,6 @@ function sendScript(script, keysStr, argsStr) {
 	});
 }
 
-function copyByteArray(b) {
-	if (ArrayBuffer.prototype.slice) {
-		return b.buffer.slice(b.byteOffset, b.byteLength + b.byteOffset)
-	}
-	var cpy = new ArrayBuffer(b.byteLength);
-	new Uint8Array(cpy).set(b);
-	return cpy;
-}
-
-function OpaWebsocketWriter(ws) {
-	this.ws = ws;
-}
-OpaWebsocketWriter.prototype.write = function(b) {
-	this.ws.send(copyByteArray(b));
-}
-
 function disableButtons(disabled) {
 	var ids = ["disconnectButton", "cmdButton", "scriptButton", "subscribeButton", "testButton"];
 	for (var i = 0; i < ids.length; ++i) {
@@ -981,11 +965,8 @@ function connect2(url, pass) {
 	// TODO: error message if cannot connect
 	var websock = new WebSocket(url);
 	websock.binaryType = "arraybuffer";
-	websock.onmessage = function(event) {
-		OPAC.onRecv(new Uint8Array(event.data));
-	}
 	document.getElementById("ws_disconnected").innerHTML = "Connecting...";
-	OPAC = new Opatomic.EventClient(new OpaWebsocketWriter(websock));
+	OPAC = Opatomic.newClient(websock);
 	SUBS = {};
 	WSCONN = websock;
 	websock.onopen = function(msg) {
