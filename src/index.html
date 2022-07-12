@@ -670,6 +670,8 @@ function convertUserToken(str, args) {
 		return true;
 	} else if (str == "SORTMAX") {
 		return Opatomic.OpaDef.SORTMAX_OBJ;
+	} else if (str == "-0") {
+		return -0;
 	} else if (str.length == 0) {
 		return str;
 	} else if (isNumStr(str)) {
