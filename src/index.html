@@ -180,7 +180,7 @@ function newChart(id, label, numPoints, color) {
 function uplotSupported() {
 	var w = window;
 	function hop(o, p) {
-		return o.hasOwnProperty(p);
+		return Object.prototype.hasOwnProperty.call(o, p);
 	}
 	if (!hop(w, "Path2D") || !hop(w, "Promise") || !hop(w, "devicePixelRatio") || !hop(w, "Intl") || !hop(w, "Map")) {
 		return false;

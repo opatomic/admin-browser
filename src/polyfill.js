@@ -3,7 +3,7 @@
 (function (undefined) {
 	"use strict";
 	function polyfill(o, k, v) {
-		if (!o.hasOwnProperty(k)) {
+		if (!Object.prototype.hasOwnProperty.call(o, k)) {
 			o[k] = v;
 		}
 	}
