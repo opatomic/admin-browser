@@ -1,3 +1,4 @@
+"use strict";
 
 var WSCONN;
 var RECONNECT = {};
@@ -40,7 +41,7 @@ function chartSplits(scaleMax) {
 		}
 	}
 	var splits = [0];
-	var splitSize = c/div*e;
+	var splitSize = c / div * e;
 	for (var i = 1; i <= div; ++i) {
 		splits.push(splitSize * i);
 	}
@@ -50,7 +51,7 @@ function chartSplits(scaleMax) {
 function newChart(id, label, numPoints, color) {
 	var data = [
 		new Array(numPoints),
-		new Array(numPoints),
+		new Array(numPoints)
 	];
 	for (var i = 0; i < numPoints; ++i) {
 		data[0][i] = i;
@@ -116,7 +117,7 @@ function initCharts() {
 		return;
 	}
 	loadScript("uplot/uPlot.iife.min.js", function() {
-		if (typeof uPlot !== 'undefined') {
+		if (typeof uPlot !== "undefined") {
 			newChart("netrecvChart", "net.recv", 120, "blue");
 			newChart("netsentChart", "net.sent", 120, "blue");
 			newChart("latencyChart", "latency (ms)", 120, "blue");
@@ -144,7 +145,7 @@ function loadAceEditor() {
 	ACELOADED = true;
 	loadScript("ace-min-noconflict/ace.js", function() {
 		loadScript("ace-min-noconflict/ext-language_tools.js", function() {
-			document.getElementById('scriptInput').innerHTML = "";
+			document.getElementById("scriptInput").innerHTML = "";
 			document.getElementById("acejsVer").textContent = "v" + ace.version;
 			LUAEDITOR = ace.edit("scriptInput");
 			LUAEDITOR.session.setMode("ace/mode/lua");
@@ -169,13 +170,13 @@ function initPage() {
 	if (window.location.hostname) {
 		var protocol = window.location.protocol == "https:" ? "wss://" : "ws://";
 		var port = window.location.port ? ":" + window.location.port : "";
-		document.getElementById('ws_url').value = protocol + window.location.hostname + port;
+		document.getElementById("ws_url").value = protocol + window.location.hostname + port;
 	}
 
-	document.getElementById('scriptInput').innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
+	document.getElementById("scriptInput").innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
 	LUAEDITOR = {
 		getValue: function() {
-			return document.getElementById('scriptTextEditor').value;
+			return document.getElementById("scriptTextEditor").value;
 		}
 	};
 
@@ -229,17 +230,18 @@ function prettyUptime(t) {
 	var msperm = 1000 * 60;
 	var msperh = msperm * 60;
 	var msperd = msperh * 24;
+	var val;
 	if (t >= msperd) {
-		var val = Math.floor(t / msperd);
+		val = Math.floor(t / msperd);
 		return val + "d " + prettyUptime(t - (val * msperd));
 	} else if (t >= msperh) {
-		var val = Math.floor(t / msperh);
+		val = Math.floor(t / msperh);
 		return val + "h " + prettyUptime(t - (val * msperh));
 	} else if (t >= msperm) {
-		var val = Math.floor(t / msperm);
+		val = Math.floor(t / msperm);
 		return val + "m " + prettyUptime(t - (val * msperm));
 	} else {
-		var val = Math.floor(t / 1000);
+		val = Math.floor(t / 1000);
 		return val + "s";
 	}
 }
@@ -248,6 +250,7 @@ function infoRow(name, val) {
 	if (val) {
 		return "<tr><td>" + name + "</td><td>" + val + "</td></tr>";
 	}
+	return "";
 }
 
 function resSetText(result, rkey, elid, fconv) {
@@ -326,17 +329,18 @@ function updateCharts() {
 
 // TODO: this function is copied from library; expose & use library version; remove this function
 function indent(space, depth) {
-	var indent = "";
+	var indentStr = "";
+	var i;
 	if (typeof space === "number") {
-		for (var i = 0; i < space * depth ; ++i) {
-			indent += " ";
+		for (i = 0; i < space * depth; ++i) {
+			indentStr += " ";
 		}
 	} else if (typeof space === "string") {
-		for (var i = 0; i <= depth; ++i) {
-			indent += space;
+		for (i = 0; i <= depth; ++i) {
+			indentStr += space;
 		}
 	}
-	return indent;
+	return indentStr;
 }
 
 function prettyResponse2(obj, space, depth) {
@@ -346,18 +350,18 @@ function prettyResponse2(obj, space, depth) {
 		case "null":
 			return '<span class="null">null</span>';
 		case "boolean":
-			return '<span class="bool">' + Opatomic.stringify(obj) + '</span>';
+			return '<span class="bool">' + Opatomic.stringify(obj) + "</span>";
 		case "SORTMAX":
 			return '<span class="sortmax">SORTMAX</span>';
 		case "number":
 		case "BigInteger":
 		case "BigDec":
-			return '<span class="num">' + Opatomic.stringify(obj) + '</span>';
+			return '<span class="num">' + Opatomic.stringify(obj) + "</span>";
 		case "Uint8Array":
 		case "Buffer":
-			return '<span class="blob">' + escEntities(Opatomic.stringify(obj)) + '</span>';
+			return '<span class="blob">' + escEntities(Opatomic.stringify(obj)) + "</span>";
 		case "string":
-			return '<span class="str">' + escEntities(Opatomic.stringify(obj)) + '</span>';
+			return '<span class="str">' + escEntities(Opatomic.stringify(obj)) + "</span>";
 		case "Array":
 			if (obj.length == 0) {
 				return "[]";
@@ -374,7 +378,7 @@ function prettyResponse2(obj, space, depth) {
 			var indent2 = indent(space, depth + 1);
 			return "[\n" + indent2 + strs.join(",\n" + indent2) + "\n" + indent1 + "]";
 	}
-	throw "unhandled case in switch";
+	throw new Error("unhandled case in switch");
 }
 
 function prettyResponse(result, err) {
@@ -417,7 +421,7 @@ function isNumStr(s) {
 	var decpos = -1;
 	var epos = -1;
 	for (var i = 1; i < s.length; ++i) {
-		var ch = s.charCodeAt(i);
+		ch = s.charCodeAt(i);
 		if (!isdigit(ch)) {
 			if (epos == -1 && (ch == 0x65 || ch == 0x45)) {
 				// 1 'e' or 'E' is allowed
@@ -468,7 +472,7 @@ function getHexChar1(ch) {
 	} else if (ch <= 90 && ch >= 65) {
 		return ch - 55;
 	}
-	throw "invalid escape sequence";
+	throw new Error("invalid escape sequence");
 }
 
 function getHexChar4(str, i) {
@@ -501,18 +505,18 @@ function convEscapedStr(str) {
 		if (ch == 92) {
 			++i;
 			if (i >= str.length || !isValidEscapeChar(str[i])) {
-				throw "invalid escape sequence";
+				throw new Error("invalid escape sequence");
 			}
 			ch = String.fromCharCode(str[i]);
 			if (ch == "x") {
 				if (i + 2 >= str.length) {
-					throw "invalid escape sequence";
+					throw new Error("invalid escape sequence");
 				}
 				out[pos++] = (getHexChar1(str[i + 1]) << 4) | getHexChar1(str[i + 2]);
 				i += 2;
 			} else if (ch == "u") {
 				if (i + 4 >= str.length) {
-					throw "invalid escape sequence";
+					throw new Error("invalid escape sequence");
 				}
 				var uchar = getHexChar4(str, i + 1);
 				i += 4;
@@ -528,11 +532,11 @@ function convEscapedStr(str) {
 				} else {
 					// surrogate pair
 					if (uchar >= 0xDC00 || i + 6 >= str.length || str[++i] != 92 || str[++i] != 117) {
-						throw "invalid surrogate pair";
+						throw new Error("invalid surrogate pair");
 					}
 					var uchar2 = getHexChar4(str, i + 1);
 					if (uchar2 < 0xDC00 || uchar2 > 0xDFFF) {
-						throw "invalid surrogate pair";
+						throw new Error("invalid surrogate pair");
 					}
 					i += 4;
 					var code = (((uchar & 0x3FF) << 10) | (uchar2 & 0x3FF)) + 0x10000;
@@ -611,13 +615,14 @@ function findTokenEnd(str, idx) {
 }
 
 function parseArgs2(str, idx, args, stopAtArrayEnd) {
+	var strEnd;
 	while (idx < str.length) {
 		switch (str.charAt(idx)) {
 			case "\"":
 			case "'":
-				var strEnd = findQuoteEnd(str, idx + 1, str.charCodeAt(idx));
+				strEnd = findQuoteEnd(str, idx + 1, str.charCodeAt(idx));
 				if (strEnd < idx + 2 || (stopAtArrayEnd && strEnd >= str.length)) {
-					throw "string end quote not found";
+					throw new Error("string end quote not found");
 				}
 				args.push(unescapeStr(str.substring(idx + 1, strEnd - 1), str.charAt(idx) == "'"));
 				idx = strEnd;
@@ -633,13 +638,13 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 					} else if (str.charAt(idx + 1) == "*") {
 						idx = str.indexOf("*/", idx);
 						if (idx < 0) {
-							throw "end of comment \"*/\" not found";
+							throw new Error("end of comment \"*/\" not found");
 						}
 						idx += 2;
 						continue;
 					}
 				}
-				throw "the / character must be inside quotes, escaped, or used as comment";
+				throw new Error("the / character must be inside quotes, escaped, or used as comment");
 				break;
 			case "[":
 				var subarray = [];
@@ -650,7 +655,7 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 				if (stopAtArrayEnd) {
 					return idx + 1;
 				}
-				throw "extra array end token ']'";
+				throw new Error("extra array end token ']'");
 			case ",":
 			case " ":
 			case "\t":
@@ -660,9 +665,9 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 				++idx;
 				break;
 			default:
-				var strEnd = findTokenEnd(str, idx);
+				strEnd = findTokenEnd(str, idx);
 				if (strEnd == idx) {
-					throw "reserved/special/control characters must be inside quotes or escaped";
+					throw new Error("reserved/special/control characters must be inside quotes or escaped");
 				}
 				args.push(convertUserToken(str.substring(idx, strEnd)));
 				idx = strEnd;
@@ -670,7 +675,7 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 		}
 	}
 	if (stopAtArrayEnd) {
-		throw "array end token ']' not found";
+		throw new Error("array end token ']' not found");
 	}
 	return idx;
 }
@@ -732,7 +737,7 @@ function sendCommand(cmdString, cb) {
 		cmdString = cmdString.trim();
 		var args = parseArgs(cmdString);
 		if (args.length == 0 || typeof args[0] != "string") {
-			throw "invalid command";
+			throw new Error("invalid command");
 		}
 		var cmd = args.shift();
 
@@ -774,11 +779,11 @@ function parseAndSend(cmdString) {
 }
 
 function cmdStrKey(e, el) {
-	var code = (e.keyCode ? e.keyCode : e.which)
+	var code = (e.keyCode ? e.keyCode : e.which);
 	if (code == 13) {
 		if (e.ctrlKey) {
 			// ctrl+enter - submit form
-			parseAndSend(document.getElementById('cmdInput').value);
+			parseAndSend(document.getElementById("cmdInput").value);
 		}
 		// enter is handled by form's onsubmit
 	}
@@ -893,7 +898,7 @@ function connect2(url, pass) {
 					updateCharts();
 				} else {
 					if (console) {
-						console.log("AUTH failed: " + err)
+						console.log("AUTH failed: " + err);
 					}
 					document.getElementById("ws_connected").innerHTML += " <span style=\"color:red\">(AUTH fail)</span>";
 				}
@@ -921,14 +926,14 @@ function connect2(url, pass) {
 				}
 			});
 		}
-	}
+	};
 	websock.onclose = function(msg) {
 		if (WSCONN === websock) {
 			closeClient();
 			clearTimeout(RECONNECT.timeout);
 			RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
 		}
-	}
+	};
 }
 
 function connect(url, pass) {
@@ -954,7 +959,7 @@ function disconnect() {
 
 function runTestCase(cmd, expect, islast, results, callTime) {
 	sendCommand(cmd, function(err, result) {
-		results.push([cmd,expect,result,err]);
+		results.push([cmd, expect, result, err]);
 		if (!islast) {
 			return;
 		}
@@ -964,7 +969,6 @@ function runTestCase(cmd, expect, islast, results, callTime) {
 
 		var allText = "";
 
-		var text = Opatomic.stringify(err ? err : result);
 		for (var i = 0; i < results.length; ++i) {
 			var iresult = results[i];
 			allText += "<pre>" + "&gt; " + iresult[0] + "</pre>";
@@ -987,8 +991,6 @@ function runTestCasesUnsafe() {
 	var tests = OPATESTCASES;
 	var callTime = new Date().getTime();
 	for (var idx = 0; idx < tests.length - 1; idx += 2) {
-		var cmd = tests[idx];
-		var expect = tests[idx + 1];
 		runTestCase(tests[idx], tests[idx + 1], idx == tests.length - 2, results, callTime);
 	}
 }
