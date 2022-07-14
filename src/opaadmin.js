@@ -20,6 +20,54 @@ var LUAEDITOR;
 
 
 
+function prettySize(size) {
+	if (size >= 1099511627776) {
+		return (Math.round(size / 1099511627776 * 100) / 100) + " TB";
+	} else if (size >= 1073741824) {
+		return (Math.round(size / 1073741824 * 100) / 100) + " GB";
+	} else if (size >= 1048576) {
+		return (Math.round(size / 1048576 * 100) / 100) + " MB";
+	} else if (size >= 1024) {
+		return (Math.round(size / 1024 * 100) / 100) + " KB";
+	} else {
+		return size + " B";
+	}
+}
+
+function prettyNum(size) {
+	if (size >= 1000000000000) {
+		return (Math.round(size / 1000000000000 * 10) / 10) + "T";
+	} else if (size >= 1000000000) {
+		return (Math.round(size / 1000000000 * 10) / 10) + "G";
+	} else if (size >= 1000000) {
+		return (Math.round(size / 1000000 * 10) / 10) + "M";
+	} else if (size >= 1000) {
+		return (Math.round(size / 1000 * 10) / 10) + "K";
+	} else {
+		return (Math.round(size * 10) / 10);
+	}
+}
+
+function prettyUptime(t) {
+	var msperm = 1000 * 60;
+	var msperh = msperm * 60;
+	var msperd = msperh * 24;
+	var val;
+	if (t >= msperd) {
+		val = Math.floor(t / msperd);
+		return val + "d " + prettyUptime(t - (val * msperd));
+	} else if (t >= msperh) {
+		val = Math.floor(t / msperh);
+		return val + "h " + prettyUptime(t - (val * msperh));
+	} else if (t >= msperm) {
+		val = Math.floor(t / msperm);
+		return val + "m " + prettyUptime(t - (val * msperm));
+	} else {
+		val = Math.floor(t / 1000);
+		return val + "s";
+	}
+}
+
 function chartSplits(scaleMax) {
 	var e = parseFloat(scaleMax).toExponential();
 	var epos = e.indexOf("e");
@@ -105,6 +153,16 @@ function uplotSupported() {
 	return true;
 }
 
+function loadScript(url, onload) {
+	var el = document.createElement("script");
+	if (onload) {
+		el.onload = onload;
+		el.onreadystatechange = onload;
+	}
+	el.src = url;
+	document.body.appendChild(el);
+}
+
 function initCharts() {
 	if (UPLOTLOADED) {
 		return;
@@ -128,16 +186,6 @@ function initCharts() {
 	});
 }
 
-function loadScript(url, onload) {
-	var el = document.createElement("script");
-	if (onload) {
-		el.onload = onload;
-		el.onreadystatechange = onload;
-	}
-	el.src = url;
-	document.body.appendChild(el);
-}
-
 function loadAceEditor() {
 	if (ACELOADED) {
 		return;
@@ -152,6 +200,13 @@ function loadAceEditor() {
 			LUAEDITOR.setOptions({enableBasicAutocompletion:true,enableSnippets:true});
 		});
 	});
+}
+
+function disableButtons(disabled) {
+	var ids = ["disconnectButton", "cmdButton", "scriptButton", "subscribeButton", "testButton"];
+	for (var i = 0; i < ids.length; ++i) {
+		document.getElementById(ids[i]).disabled = disabled;
+	}
 }
 
 function initPage() {
@@ -198,54 +253,6 @@ function addChartPoint(chartName, val) {
 	}
 }
 
-function prettySize(size) {
-	if (size >= 1099511627776) {
-		return (Math.round(size / 1099511627776 * 100) / 100) + " TB";
-	} else if (size >= 1073741824) {
-		return (Math.round(size / 1073741824 * 100) / 100) + " GB";
-	} else if (size >= 1048576) {
-		return (Math.round(size / 1048576 * 100) / 100) + " MB";
-	} else if (size >= 1024) {
-		return (Math.round(size / 1024 * 100) / 100) + " KB";
-	} else {
-		return size + " B";
-	}
-}
-
-function prettyNum(size) {
-	if (size >= 1000000000000) {
-		return (Math.round(size / 1000000000000 * 10) / 10) + "T";
-	} else if (size >= 1000000000) {
-		return (Math.round(size / 1000000000 * 10) / 10) + "G";
-	} else if (size >= 1000000) {
-		return (Math.round(size / 1000000 * 10) / 10) + "M";
-	} else if (size >= 1000) {
-		return (Math.round(size / 1000 * 10) / 10) + "K";
-	} else {
-		return (Math.round(size * 10) / 10);
-	}
-}
-
-function prettyUptime(t) {
-	var msperm = 1000 * 60;
-	var msperh = msperm * 60;
-	var msperd = msperh * 24;
-	var val;
-	if (t >= msperd) {
-		val = Math.floor(t / msperd);
-		return val + "d " + prettyUptime(t - (val * msperd));
-	} else if (t >= msperh) {
-		val = Math.floor(t / msperh);
-		return val + "h " + prettyUptime(t - (val * msperh));
-	} else if (t >= msperm) {
-		val = Math.floor(t / msperm);
-		return val + "m " + prettyUptime(t - (val * msperm));
-	} else {
-		val = Math.floor(t / 1000);
-		return val + "s";
-	}
-}
-
 function infoRow(name, val) {
 	if (val) {
 		return "<tr><td>" + name + "</td><td>" + val + "</td></tr>";
@@ -257,6 +264,14 @@ function resSetText(result, rkey, elid, fconv) {
 	if (rkey in result) {
 		document.getElementById(elid).textContent = fconv ? fconv(result[rkey]) : result[rkey];
 	}
+}
+
+function isErrCode(errResponse, intcode) {
+	return errResponse == intcode || (Array.isArray(errResponse) && errResponse[0] == intcode);
+}
+
+function isClosedErr(errResponse) {
+	return isErrCode(errResponse, Opatomic.OpaDef.ERR_CLOSED);
 }
 
 function updateCharts() {
@@ -325,6 +340,18 @@ function updateCharts() {
 		GTIMEOUT = setTimeout(updateCharts, GTIMERLEN);
 	});
 	OPAC.flush();
+}
+
+function escEntities(s) {
+	// TODO: faster replacement function?
+	// note: replace '&' first!!
+	// note: regex is needed to replace ALL occurrences
+	s = s.replace(/&/g, "&amp;");
+	s = s.replace(/</g, "&lt;");
+	s = s.replace(/>/g, "&gt;");
+	s = s.replace(/"/g, "&quot;");
+	s = s.replace(/'/g, "&#039;");
+	return s;
 }
 
 // TODO: this function is copied from library; expose & use library version; remove this function
@@ -692,14 +719,6 @@ function showSubMsg(msg) {
 	el.innerHTML += msgtext + "\n";
 }
 
-function isErrCode(errResponse, intcode) {
-	return errResponse == intcode || (Array.isArray(errResponse) && errResponse[0] == intcode);
-}
-
-function isClosedErr(errResponse) {
-	return isErrCode(errResponse, Opatomic.OpaDef.ERR_CLOSED);
-}
-
 function subscribe2(chans) {
 	document.getElementById("pubsubMessages").innerHTML = "";
 	SUBS.chans = chans;
@@ -799,10 +818,11 @@ function sendScript(script, keysStr, argsStr) {
 	});
 }
 
-function disableButtons(disabled) {
-	var ids = ["disconnectButton", "cmdButton", "scriptButton", "subscribeButton", "testButton"];
-	for (var i = 0; i < ids.length; ++i) {
-		document.getElementById(ids[i]).disabled = disabled;
+function disconnect() {
+	RECONNECT.url = null;
+	RECONNECT.pass = null;
+	if (WSCONN) {
+		WSCONN.close();
 	}
 }
 
@@ -949,14 +969,6 @@ function connect(url, pass) {
 	}
 }
 
-function disconnect() {
-	RECONNECT.url = null;
-	RECONNECT.pass = null;
-	if (WSCONN) {
-		WSCONN.close();
-	}
-}
-
 function runTestCase(cmd, expect, islast, results, callTime) {
 	sendCommand(cmd, function(err, result) {
 		results.push([cmd, expect, result, err]);
@@ -1026,17 +1038,5 @@ function changeTimerLen() {
 // ECHO [33,"hi",-5.06e-34,[[]], null, false, true, 18446744073709566,"kjrkjelrjwlkejrfwklejrkwjer",[247923798734982734]]
 // 18446744073709566
 
-
-function escEntities(s) {
-	// TODO: faster replacement function?
-	// note: replace '&' first!!
-	// note: regex is needed to replace ALL occurrences
-	s = s.replace(/&/g, "&amp;");
-	s = s.replace(/</g, "&lt;");
-	s = s.replace(/>/g, "&gt;");
-	s = s.replace(/"/g, "&quot;");
-	s = s.replace(/'/g, "&#039;");
-	return s;
-}
 
 
