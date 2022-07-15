@@ -518,29 +518,29 @@ function isValidEscapeChar(ch) {
 }
 
 function convEscapedStr(str) {
-	str = (new TextEncoder("utf-8")).encode(str);
-	var out = new Uint8Array(str.length);
+	var bytes = (new TextEncoder("utf-8")).encode(str);
+	var out = new Uint8Array(bytes.length);
 	var pos = 0;
-	for (var i = 0; i < str.length; ++i) {
-		var ch = str[i];
+	for (var i = 0; i < bytes.length; ++i) {
+		var ch = bytes[i];
 		// check whether character is escape backslash \ (ascii code 92)
 		if (ch == 92) {
 			++i;
-			if (i >= str.length || !isValidEscapeChar(str[i])) {
+			if (i >= bytes.length || !isValidEscapeChar(bytes[i])) {
 				throw new Error("invalid escape sequence");
 			}
-			ch = String.fromCharCode(str[i]);
+			ch = String.fromCharCode(bytes[i]);
 			if (ch == "x") {
-				if (i + 2 >= str.length) {
+				if (i + 2 >= bytes.length) {
 					throw new Error("invalid escape sequence");
 				}
-				out[pos++] = (getHexChar1(str[i + 1]) << 4) | getHexChar1(str[i + 2]);
+				out[pos++] = (getHexChar1(bytes[i + 1]) << 4) | getHexChar1(bytes[i + 2]);
 				i += 2;
 			} else if (ch == "u") {
-				if (i + 4 >= str.length) {
+				if (i + 4 >= bytes.length) {
 					throw new Error("invalid escape sequence");
 				}
-				var uchar = getHexChar4(str, i + 1);
+				var uchar = getHexChar4(bytes, i + 1);
 				i += 4;
 				if (uchar < 0x80) {
 					out[pos++] = uchar & 0xFF;
@@ -553,10 +553,10 @@ function convEscapedStr(str) {
 					out[pos++] = 0x80 | (uchar & 0x3F);
 				} else {
 					// surrogate pair
-					if (uchar >= 0xDC00 || i + 6 >= str.length || str[++i] != 92 || str[++i] != 117) {
+					if (uchar >= 0xDC00 || i + 6 >= bytes.length || bytes[++i] != 92 || bytes[++i] != 117) {
 						throw new Error("invalid surrogate pair");
 					}
-					var uchar2 = getHexChar4(str, i + 1);
+					var uchar2 = getHexChar4(bytes, i + 1);
 					if (uchar2 < 0xDC00 || uchar2 > 0xDFFF) {
 						throw new Error("invalid surrogate pair");
 					}
@@ -578,7 +578,7 @@ function convEscapedStr(str) {
 			} else if (ch == "f") {
 				out[pos++] = 12;
 			} else {
-				out[pos++] = str[i];
+				out[pos++] = bytes[i];
 			}
 		} else {
 			out[pos++] = ch;
