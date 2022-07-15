@@ -669,7 +669,6 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 					}
 				}
 				throw new Error("the / character must be inside quotes, escaped, or used as comment");
-				break;
 			case "[":
 				var subarray = [];
 				idx = parseArgs2(str, idx + 1, subarray, true);
