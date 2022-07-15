@@ -421,11 +421,6 @@ function prettyResponse(result, err) {
 	}
 }
 
-function iswhite(ch) {
-	// 0x20=space 0x9=\t 0xD=\r 0xA=\n
-	return ch == 0x20 || ch == 0x9 || ch == 0xD || ch == 0xA;
-}
-
 function isdigit(ch) {
 	// 0=0x30 9=0x39
 	return ch <= 0x39 && ch >= 0x30;
