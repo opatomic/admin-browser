@@ -97,13 +97,13 @@ function chartSplits(scaleMax) {
 }
 
 function newChart(id, label, numPoints, color) {
-	var data = [
+	var dataObj = [
 		new Array(numPoints),
 		new Array(numPoints)
 	];
 	for (var i = 0; i < numPoints; ++i) {
-		data[0][i] = i;
-		data[1][i] = 0;
+		dataObj[0][i] = i;
+		dataObj[1][i] = 0;
 	}
 
 	var opts = {
@@ -127,10 +127,10 @@ function newChart(id, label, numPoints, color) {
 		},
 		series: [{}, {stroke: color}],
 	};
-	var c = new uPlot(opts, data, document.getElementById(id));
+	var c = new uPlot(opts, dataObj, document.getElementById(id));
 	GCHARTS[id] = {
-		'data': data,
-		'chart': c
+		data: dataObj,
+		chart: c
 	};
 }
 
