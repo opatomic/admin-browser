@@ -598,7 +598,7 @@ function unescapeStr(str, isBin) {
 	return isBin ? bytes : (new TextDecoder()).decode(bytes);
 }
 
-function convertUserToken(str, args) {
+function convertUserToken(str) {
 	if (str == "undefined") {
 		return undefined;
 	} else if (str == "null") {
