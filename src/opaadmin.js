@@ -44,7 +44,7 @@ function prettyNum(size) {
 	} else if (size >= 1000) {
 		return (Math.round(size / 1000 * 10) / 10) + "K";
 	} else {
-		return (Math.round(size * 10) / 10);
+		return (Math.round(size * 10) / 10) + "";
 	}
 }
 
