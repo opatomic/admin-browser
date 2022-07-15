@@ -616,11 +616,13 @@ function convertUserToken(str) {
 	} else if (isNumStr(str)) {
 		return new Opatomic.BigDec(str);
 	} else {
-		var lower = str.toLowerCase();
-		if (lower == "-infinity" || lower == "-inf") {
-			return -Infinity;
-		} else if (lower == "infinity" || lower == "inf" || lower == "+infinity" || lower == "+inf") {
-			return Infinity;
+		if (str.length <= 9) {
+			var lower = str.toLowerCase();
+			if (lower == "-infinity" || lower == "-inf") {
+				return -Infinity;
+			} else if (lower == "infinity" || lower == "inf" || lower == "+infinity" || lower == "+inf") {
+				return Infinity;
+			}
 		}
 		return unescapeStr(str, false);
 	}
