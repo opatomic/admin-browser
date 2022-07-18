@@ -110,22 +110,22 @@ function newChart(id, label, numPoints, color) {
 		title: label,
 		width: 300,
 		height: 150,
-		legend: {show:false},
-		cursor: {show:false},
-		axes:[
-			{show:false,grid:{show:false}},
+		legend: { show: false },
+		cursor: { show: false },
+		axes: [
+			{ show: false, grid: { show: false } },
 			{
-				values: function(self, ticks) {return ticks.map(function(rawValue){return prettyNum(rawValue);})},
-				splits: function(self, axisIdx, scaleMin, scaleMax, foundIncr, pctSpace) {return chartSplits(scaleMax);}
+				values: function(self, ticks) { return ticks.map(function(rawValue) { return prettyNum(rawValue); }); },
+				splits: function(self, axisIdx, scaleMin, scaleMax, foundIncr, pctSpace) { return chartSplits(scaleMax); }
 			}
 		],
 		scales: {
-			x: {time: false},
+			x: { time: false },
 			y: {
-				range: function(self, dataMin, dataMax) { return [0,dataMax]; }
+				range: function(self, dataMin, dataMax) { return [0, dataMax]; }
 			}
 		},
-		series: [{}, {stroke: color}],
+		series: [{}, { stroke: color }]
 	};
 	var c = new uPlot(opts, dataObj, document.getElementById(id));
 	GCHARTS[id] = {
@@ -197,7 +197,7 @@ function loadAceEditor() {
 			document.getElementById("acejsVer").textContent = "v" + ace.version;
 			LUAEDITOR = ace.edit("scriptInput");
 			LUAEDITOR.session.setMode("ace/mode/lua");
-			LUAEDITOR.setOptions({enableBasicAutocompletion:true,enableSnippets:true});
+			LUAEDITOR.setOptions({ enableBasicAutocompletion: true, enableSnippets: true });
 		});
 	});
 }
