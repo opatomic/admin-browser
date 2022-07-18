@@ -72,7 +72,7 @@ function chartSplits(scaleMax) {
 	var e = parseFloat(scaleMax).toExponential();
 	var epos = e.indexOf("e");
 	var c = parseFloat(e.substring(0, epos));
-	e = parseInt(e.substring(epos + 2)) - 1;
+	e = parseInt(e.substring(epos + 2), 10) - 1;
 	e = Math.pow(10, e);
 	c *= 10;
 	c = Math.ceil(c);
@@ -1022,7 +1022,7 @@ function runTestCases() {
 
 function changeTimerLen() {
 	var newVal = prompt("Refresh every ___ milliseconds", GTIMERLEN.toString());
-	newVal = parseInt(newVal);
+	newVal = parseInt(newVal, 10);
 	if (Number.isInteger(newVal)) {
 		GTIMERLEN = newVal;
 		document.getElementById("timerLen").textContent = GTIMERLEN.toString();
