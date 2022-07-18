@@ -832,8 +832,8 @@ function reconnectIfNeeded() {
 	//console.log("checking server via XMLHttpRequest");
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
-		if (this.readyState == 4) {
-			if (this.status == 200) {
+		if (xhr.readyState == 4) {
+			if (xhr.status == 200) {
 				//console.log("reconnecting websocket");
 				// note: this will log an error to console every time it fails; no clue how to prevent this
 				//   "Firefox can't establish a connection to the server at ws://localhost:8080/."
