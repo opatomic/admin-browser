@@ -223,11 +223,16 @@ function loadAceEditor() {
 	ACELOADED = true;
 	loadScript("ace-min-noconflict/ace.js", function() {
 		loadScript("ace-min-noconflict/ext-language_tools.js", function() {
-			document.getElementById("scriptInput").innerHTML = "";
+			document.getElementById("scriptInput1").style.display = "none";
+			document.getElementById("scriptInput2").style.removeProperty("display");
 			document.getElementById("acejsVer").textContent = "v" + ace.version;
-			LUAEDITOR = ace.edit("scriptInput");
+			LUAEDITOR = ace.edit("scriptInput2");
 			LUAEDITOR.getSession().setMode("ace/mode/lua");
 			LUAEDITOR.setOptions({ enableBasicAutocompletion: true, enableSnippets: true });
+			LUAEDITOR.getSession().setValue(document.getElementById("scriptTextEditor").value);
+			LUAEDITOR.getSession().on("change", function() {
+				document.getElementById("scriptTextEditor").value = LUAEDITOR.getSession().getValue();
+			});
 		});
 	});
 }
@@ -258,8 +263,6 @@ function initPage() {
 		var port = window.location.port ? ":" + window.location.port : "";
 		document.getElementById("ws_url").value = protocol + window.location.hostname + port;
 	}
-
-	document.getElementById("scriptInput").innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
 
 	if (document.getElementById("tab2").checked) {
 		loadAceEditor();
