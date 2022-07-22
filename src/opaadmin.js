@@ -874,7 +874,12 @@ function subscribe() {
 		// TODO: status messages indicating progress of each op
 		OPAC.call("PUNSUBSCRIBE");
 		OPAC.call("UNSUBSCRIBE", null, function(err, result) {
-			subscribe2(chans);
+			if (err) {
+				console.log(err);
+				// TODO: show an error message on page for user
+			} else {
+				subscribe2(chans);
+			}
 		});
 	} else {
 		subscribe2(chans);
