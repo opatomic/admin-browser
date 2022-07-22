@@ -2,10 +2,19 @@
 
 var WSCONN;
 var RECONNECT = {};
+/**
+ * @type {?Opatomic.Client}
+ */
 var OPAC;
 var SUBS = {};
+/**
+ * @const {number}
+ */
 var ERRCODE_AUTH = -53;
 
+/**
+ * @type {number}
+ */
 var GTIMERLEN = 200;
 var GCHARTS = {};
 var GBWINLAST;
@@ -20,6 +29,10 @@ var LUAEDITOR;
 
 
 
+/**
+ * @param {number} size
+ * @return {string}
+ */
 function prettySize(size) {
 	if (size >= 1099511627776) {
 		return (Math.round(size / 1099511627776 * 100) / 100) + " TB";
@@ -34,6 +47,10 @@ function prettySize(size) {
 	}
 }
 
+/**
+ * @param {number} size
+ * @return {string}
+ */
 function prettyNum(size) {
 	if (size >= 1000000000000) {
 		return (Math.round(size / 1000000000000 * 10) / 10) + "T";
@@ -48,6 +65,10 @@ function prettyNum(size) {
 	}
 }
 
+/**
+ * @param {number} t
+ * @return {string}
+ */
 function prettyUptime(t) {
 	var msperm = 1000 * 60;
 	var msperh = msperm * 60;
@@ -134,8 +155,16 @@ function newChart(id, label, numPoints, color) {
 	};
 }
 
+/**
+ * @return {boolean}
+ */
 function uplotSupported() {
 	var w = window;
+	/**
+	 * @param {!Object} o
+	 * @param {string} p
+	 * @return {boolean}
+	 */
 	function hop(o, p) {
 		return Object.prototype.hasOwnProperty.call(o, p);
 	}
@@ -253,6 +282,11 @@ function addChartPoint(chartName, val) {
 	}
 }
 
+/**
+ * @param {string} name
+ * @param {string} val
+ * @return {string}
+ */
 function infoRow(name, val) {
 	if (val) {
 		return "<tr><td>" + name + "</td><td>" + val + "</td></tr>";
@@ -266,10 +300,19 @@ function resSetText(result, rkey, elid, fconv) {
 	}
 }
 
+/**
+ * @param {*} errResponse
+ * @param {number} intcode
+ * @return {boolean}
+ */
 function isErrCode(errResponse, intcode) {
 	return errResponse == intcode || (Array.isArray(errResponse) && errResponse[0] == intcode);
 }
 
+/**
+ * @param {*} errResponse
+ * @return {boolean}
+ */
 function isClosedErr(errResponse) {
 	return isErrCode(errResponse, Opatomic.OpaDef.ERR_CLOSED);
 }
@@ -342,6 +385,10 @@ function updateCharts() {
 	OPAC.flush();
 }
 
+/**
+ * @param {string} s
+ * @return {string}
+ */
 function escEntities(s) {
 	// TODO: faster replacement function?
 	// note: replace '&' first!!
@@ -355,6 +402,11 @@ function escEntities(s) {
 }
 
 // TODO: this function is copied from library; expose & use library version; remove this function
+/**
+ * @param {number|string} space
+ * @param {number} depth
+ * @return {string}
+ */
 function indent(space, depth) {
 	var indentStr = "";
 	var i;
@@ -370,6 +422,12 @@ function indent(space, depth) {
 	return indentStr;
 }
 
+/**
+ * @param {*} obj
+ * @param {number|string} space
+ * @param {number=} depth
+ * @return {string}
+ */
 function prettyResponse2(obj, space, depth) {
 	switch (Opatomic.opaType(obj)) {
 		case "undefined":
@@ -408,6 +466,11 @@ function prettyResponse2(obj, space, depth) {
 	throw new Error("unhandled case in switch");
 }
 
+/**
+ * @param {*} result
+ * @param {*} err
+ * @return {string}
+ */
 function prettyResponse(result, err) {
 	if (err) {
 		return '<span class="error">ERROR: </span>' + prettyResponse2(err, 4);
@@ -421,16 +484,28 @@ function prettyResponse(result, err) {
 	}
 }
 
+/**
+ * @param {number} ch
+ * @return {boolean}
+ */
 function isdigit(ch) {
 	// 0=0x30 9=0x39
 	return ch <= 0x39 && ch >= 0x30;
 }
 
+/**
+ * @param {number} ch
+ * @return {boolean}
+ */
 function isalphanum(ch) {
 	// a=97 z=122 A=65 Z=90
 	return (ch >= 97 && ch <= 122) || (ch >= 65 && ch <= 90) || (isdigit(ch));
 }
 
+/**
+ * @param {string} s
+ * @return {boolean}
+ */
 function isNumStr(s) {
 	// first char must be '-' or digit; if first is '-' then 2nd must be digit
 	var ch = s.charCodeAt(0);
@@ -471,6 +546,12 @@ function isNumStr(s) {
 	return true;
 }
 
+/**
+ * @param {string} str
+ * @param {number} idx
+ * @param {number} chToFind
+ * @return {number}
+ */
 function findQuoteEnd(str, idx, chToFind) {
 	for (; idx < str.length; ++idx) {
 		var ch = str.charCodeAt(idx);
@@ -486,6 +567,10 @@ function findQuoteEnd(str, idx, chToFind) {
 	return idx;
 }
 
+/**
+ * @param {number} ch
+ * @return {number}
+ */
 function getHexChar1(ch) {
 	if (isdigit(ch)) {
 		return ch - 48;
@@ -497,6 +582,11 @@ function getHexChar1(ch) {
 	throw new Error("invalid escape sequence");
 }
 
+/**
+ * @param {Uint8Array} str
+ * @param {number} i
+ * @return {number}
+ */
 function getHexChar4(str, i) {
 	var uchar = getHexChar1(str[i++]);
 	uchar = uchar << 4 | getHexChar1(str[i++]);
@@ -505,6 +595,10 @@ function getHexChar4(str, i) {
 	return uchar;
 }
 
+/**
+ * @param {number} ch
+ * @return {boolean}
+ */
 function isValidEscapeChar(ch) {
 	if (isalphanum(ch)) {
 		// b=98 f=102 n=110 r=114 t=116 u=117 x=120
@@ -517,6 +611,10 @@ function isValidEscapeChar(ch) {
 	}
 }
 
+/**
+ * @param {string} str
+ * @return {!Uint8Array}
+ */
 function convEscapedStr(str) {
 	var bytes = (new TextEncoder("utf-8")).encode(str);
 	var out = new Uint8Array(bytes.length);
@@ -587,12 +685,21 @@ function convEscapedStr(str) {
 	return pos > 0 ? out.subarray(0, pos) : out;
 }
 
+/**
+ * @param {string} str
+ * @param {boolean} isBin
+ * @return {!Uint8Array|string}
+ */
 function unescapeStr(str, isBin) {
 	// the value returned here may not be valid utf-8 (from \x escape sequences)
 	var bytes = convEscapedStr(str);
 	return isBin ? bytes : (new TextDecoder()).decode(bytes);
 }
 
+/**
+ * @param {string} str
+ * @return {*}
+ */
 function convertUserToken(str) {
 	if (str == "undefined") {
 		return undefined;
@@ -623,6 +730,11 @@ function convertUserToken(str) {
 	}
 }
 
+/**
+ * @param {string} str
+ * @param {number} idx
+ * @return {number}
+ */
 function findTokenEnd(str, idx) {
 	while (idx < str.length) {
 		var ch = str.charCodeAt(idx);
@@ -638,6 +750,13 @@ function findTokenEnd(str, idx) {
 	return idx;
 }
 
+/**
+ * @param {string} str
+ * @param {number} idx
+ * @param {!Array} args
+ * @param {boolean} stopAtArrayEnd
+ * @return {number}
+ */
 function parseArgs2(str, idx, args, stopAtArrayEnd) {
 	var strEnd;
 	while (idx < str.length) {
@@ -703,24 +822,37 @@ function parseArgs2(str, idx, args, stopAtArrayEnd) {
 	return idx;
 }
 
+/**
+ * @param {string} str
+ * @return {!Array}
+ */
 function parseArgs(str) {
 	var a = [];
 	parseArgs2(str, 0, a, false);
 	return a;
 }
 
+/**
+ * @param {*} msg
+ */
 function showSubMsg(msg) {
 	var msgtext = prettyResponse(msg, null);
 	var el = document.getElementById("pubsubMessages");
 	el.innerHTML += msgtext + "\n";
 }
 
+/**
+ * @param {!Array} chans
+ */
 function subscribe2(chans) {
 	document.getElementById("pubsubMessages").innerHTML = "";
 	SUBS.chans = chans;
 	OPAC.call("SUBSCRIBE", chans);
 }
 
+/**
+ * @param {string} userTypedStr
+ */
 function subscribe(userTypedStr) {
 	if (!SUBS.id) {
 		SUBS.id = "_pubsub";
@@ -747,6 +879,10 @@ function subscribe(userTypedStr) {
 	}
 }
 
+/**
+ * @param {string} cmdString
+ * @param {!Opatomic.ResponseCallback} cb
+ */
 function sendCommand(cmdString, cb) {
 	try {
 		cmdString = cmdString.trim();
@@ -773,6 +909,9 @@ function sendLine(line, callTime) {
 	});
 }
 
+/**
+ * @param {string} cmdString
+ */
 function parseAndSend(cmdString) {
 	try {
 		var lines = cmdString.trim().split("\n");
@@ -875,6 +1014,10 @@ function setStatusConnected() {
 	document.getElementById("ws_connected").style.display = "inline";
 }
 
+/**
+ * @param {string} url
+ * @param {string} pass
+ */
 function connect2(url, pass) {
 	if (WSCONN) {
 		WSCONN.close();
@@ -952,6 +1095,10 @@ function connect2(url, pass) {
 	};
 }
 
+/**
+ * @param {string} url
+ * @param {string} pass
+ */
 function connect(url, pass) {
 	try {
 		connect2(url, pass);
@@ -965,6 +1112,13 @@ function connect(url, pass) {
 	}
 }
 
+/**
+ * @param {string} cmd
+ * @param {string} expect
+ * @param {boolean} islast
+ * @param {!Array<!Array>} results
+ * @param {number} callTime
+ */
 function runTestCase(cmd, expect, islast, results, callTime) {
 	sendCommand(cmd, function(err, result) {
 		results.push([cmd, expect, result, err]);
