@@ -853,10 +853,9 @@ function subscribe2(chans) {
 	OPAC.call("SUBSCRIBE", chans);
 }
 
-/**
- * @param {string} userTypedStr
- */
-function subscribe(userTypedStr) {
+// eslint-disable-next-line no-unused-vars
+function subscribe() {
+	var userTypedStr = document.getElementById("subInput").value;
 	if (!SUBS.id) {
 		SUBS.id = "_pubsub";
 		OPAC.registerCB(SUBS.id, function(err, result) {
