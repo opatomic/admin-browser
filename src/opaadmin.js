@@ -225,7 +225,7 @@ function loadAceEditor() {
 			document.getElementById("scriptInput").innerHTML = "";
 			document.getElementById("acejsVer").textContent = "v" + ace.version;
 			LUAEDITOR = ace.edit("scriptInput");
-			LUAEDITOR.session.setMode("ace/mode/lua");
+			LUAEDITOR.getSession().setMode("ace/mode/lua");
 			LUAEDITOR.setOptions({ enableBasicAutocompletion: true, enableSnippets: true });
 		});
 	});
