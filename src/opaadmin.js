@@ -231,6 +231,10 @@ function loadAceEditor() {
 	});
 }
 
+function getScriptFromEditor() {
+	return LUAEDITOR ? LUAEDITOR.getValue() : document.getElementById("scriptTextEditor").value;
+}
+
 function disableButtons(disabled) {
 	var ids = ["disconnectButton", "cmdButton", "scriptButton", "subscribeButton", "testButton"];
 	for (var i = 0; i < ids.length; ++i) {
@@ -258,11 +262,6 @@ function initPage() {
 	}
 
 	document.getElementById("scriptInput").innerHTML = "<textarea id=\"scriptTextEditor\" style=\"width:100%;height:100%;\"></textarea>";
-	LUAEDITOR = {
-		getValue: function() {
-			return document.getElementById("scriptTextEditor").value;
-		}
-	};
 
 	if (document.getElementById("tab2").checked) {
 		loadAceEditor();
