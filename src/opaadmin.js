@@ -148,6 +148,7 @@ function newChart(id, label, numPoints, color) {
 		},
 		series: [{}, { stroke: color }]
 	};
+	// eslint-disable-next-line new-cap
 	var c = new uPlot(opts, dataObj, document.getElementById(id));
 	GCHARTS[id] = {
 		data: dataObj,
