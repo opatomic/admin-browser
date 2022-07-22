@@ -382,7 +382,6 @@ function updateCharts() {
 		// note: browsers may set timeouts to be 1 second when window is not in focus
 		GTIMEOUT = setTimeout(updateCharts, GTIMERLEN);
 	});
-	OPAC.flush();
 }
 
 /**
