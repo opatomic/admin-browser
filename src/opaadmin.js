@@ -283,13 +283,37 @@ function addChartPoint(chartName, val) {
 }
 
 /**
+ * @param {string} s
+ * @return {string}
+ */
+function escEntities(s) {
+	// TODO: faster replacement function?
+	// note: replace '&' first!!
+	// note: regex is needed to replace ALL occurrences
+	s = s.replace(/&/g, "&amp;");
+	s = s.replace(/</g, "&lt;");
+	s = s.replace(/>/g, "&gt;");
+	s = s.replace(/"/g, "&quot;");
+	s = s.replace(/'/g, "&#039;");
+	return s;
+}
+
+/**
+ * @param {*} v
+ * @return {string}
+ */
+function strifyAndEsc(v) {
+	return escEntities(Opatomic.stringify(v));
+}
+
+/**
  * @param {string} name
  * @param {string} val
  * @return {string}
  */
 function infoRow(name, val) {
 	if (val) {
-		return "<tr><td>" + name + "</td><td>" + val + "</td></tr>";
+		return "<tr><td>" + escEntities(name) + "</td><td>" + escEntities(val) + "</td></tr>";
 	}
 	return "";
 }
@@ -390,22 +414,6 @@ function updateCharts() {
 }
 
 /**
- * @param {string} s
- * @return {string}
- */
-function escEntities(s) {
-	// TODO: faster replacement function?
-	// note: replace '&' first!!
-	// note: regex is needed to replace ALL occurrences
-	s = s.replace(/&/g, "&amp;");
-	s = s.replace(/</g, "&lt;");
-	s = s.replace(/>/g, "&gt;");
-	s = s.replace(/"/g, "&quot;");
-	s = s.replace(/'/g, "&#039;");
-	return s;
-}
-
-/**
  * @param {number|string} space
  * @param {number} depth
  * @return {string}
@@ -448,9 +456,9 @@ function prettyResponse2(obj, space, depth) {
 			return '<span class="num">' + Opatomic.stringify(obj) + "</span>";
 		case "Uint8Array":
 		case "Buffer":
-			return '<span class="blob">' + escEntities(Opatomic.stringify(obj)) + "</span>";
+			return '<span class="blob">' + strifyAndEsc(obj) + "</span>";
 		case "string":
-			return '<span class="str">' + escEntities(Opatomic.stringify(obj)) + "</span>";
+			return '<span class="str">' + strifyAndEsc(obj) + "</span>";
 		case "Array":
 			if (obj.length == 0) {
 				return "[]";
@@ -1144,13 +1152,13 @@ function runTestCase(cmd, expect, islast, results, callTime) {
 
 		for (var i = 0; i < results.length; ++i) {
 			var iresult = results[i];
-			allText += "<pre>" + "&gt; " + iresult[0] + "</pre>";
+			allText += "<pre>" + "&gt; " + escEntities(iresult[0]) + "</pre>";
 			if (iresult[3]) {
-				allText += "<pre style=\"color:red\">" + Opatomic.stringify(iresult[3]) + "</pre>";
+				allText += "<pre style=\"color:red\">" + strifyAndEsc(iresult[3]) + "</pre>";
 			} else if (opaCompare(iresult[1], iresult[2]) != 0) {
-				allText += "<pre style=\"color:red\">Expected: " + Opatomic.stringify(iresult[1]) + "\nReceived:" + Opatomic.stringify(iresult[2]) + "</pre>";
+				allText += "<pre style=\"color:red\">Expected: " + strifyAndEsc(iresult[1]) + "\nReceived:" + strifyAndEsc(iresult[2]) + "</pre>";
 			} else {
-				allText += "<pre>" + Opatomic.stringify(iresult[2]) + "</pre>";
+				allText += "<pre>" + strifyAndEsc(iresult[2]) + "</pre>";
 			}
 		}
 
@@ -1176,7 +1184,7 @@ function runTestCases() {
 	} else {
 		sendCommand("DBSIZE", function(err, result) {
 			if (err) {
-				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">err: " + err + "</pre>";
+				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">err: " + strifyAndEsc(err) + "</pre>";
 			} else if (result !== 0) {
 				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">DB is not empty</pre>";
 			} else {
