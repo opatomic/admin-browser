@@ -238,6 +238,7 @@ function disableButtons(disabled) {
 	}
 }
 
+// eslint-disable-next-line no-unused-vars
 function initPage() {
 	disableButtons(true);
 	initCharts();
@@ -934,6 +935,7 @@ function parseAndSend(cmdString) {
 	}
 }
 
+// eslint-disable-next-line no-unused-vars
 function cmdStrKey(e, el) {
 	var code = (e.keyCode ? e.keyCode : e.which);
 	if (code == 13) {
@@ -955,6 +957,7 @@ function sendScript2(script, keysStr, argsStr) {
 	});
 }
 
+// eslint-disable-next-line no-unused-vars
 function sendScript() {
 	var src = LUAEDITOR ? LUAEDITOR.getValue() : document.getElementById("scriptTextEditor").value;
 	sendScript2(src, document.getElementById("scriptKeys").value, document.getElementById("scriptArgs").value);
@@ -1160,6 +1163,7 @@ function runTestCasesUnsafe() {
 	}
 }
 
+// eslint-disable-next-line no-unused-vars
 function runTestCases() {
 	document.getElementById("testResults").innerHTML = "";
 	if (document.getElementById("testAllowNonEmpty").checked) {
@@ -1177,6 +1181,7 @@ function runTestCases() {
 	}
 }
 
+// eslint-disable-next-line no-unused-vars
 function changeTimerLen() {
 	var newVal = prompt("Refresh every ___ milliseconds", GTIMERLEN.toString());
 	newVal = parseInt(newVal, 10);
