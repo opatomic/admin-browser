@@ -967,21 +967,17 @@ function reconnectIfNeeded() {
 
 	// TODO: implement a backoff algorithm to reconnect less frequently over time
 
-	//console.log("checking server via XMLHttpRequest");
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4) {
 			if (xhr.status == 200) {
-				//console.log("reconnecting websocket");
 				// note: this will log an error to console every time it fails; no clue how to prevent this
 				//   "Firefox can't establish a connection to the server at ws://localhost:8080/."
 				connect(RECONNECT.url, RECONNECT.pass);
 				if (!WSCONN) {
-					//console.log("websocket reconnect failed");
 					RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
 				}
 			} else {
-				//console.log("XMLHttpRequest failed");
 				RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
 			}
 		}
