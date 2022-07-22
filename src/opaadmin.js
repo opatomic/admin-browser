@@ -401,13 +401,13 @@ function escEntities(s) {
 	return s;
 }
 
-// TODO: this function is copied from library; expose & use library version; remove this function
 /**
  * @param {number|string} space
  * @param {number} depth
  * @return {string}
  */
 function indent(space, depth) {
+	// TODO: this function is copied from library; expose & use library version; remove this function
 	var indentStr = "";
 	var i;
 	if (typeof space === "number") {
