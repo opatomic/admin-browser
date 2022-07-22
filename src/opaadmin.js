@@ -267,6 +267,9 @@ function initPage() {
 	if (document.getElementById("tab2").checked) {
 		loadAceEditor();
 	}
+	if (document.getElementById("tab5").checked) {
+		document.getElementById("tab5Label").style.removeProperty("display");
+	}
 }
 
 function addChartPoint(chartName, val) {
@@ -343,6 +346,11 @@ function updateCharts() {
 			}
 		}
 
+		if (result["s.opadbg"] == 1) {
+			document.getElementById("tab5Label").style.removeProperty("display");
+		} else {
+			document.getElementById("tab5Label").style.display = "none";
+		}
 
 		if ("net.recv" in result) {
 			if (GBWINLAST) {
