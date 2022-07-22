@@ -231,10 +231,6 @@ function loadAceEditor() {
 	});
 }
 
-function getScriptFromEditor() {
-	return LUAEDITOR ? LUAEDITOR.getValue() : document.getElementById("scriptTextEditor").value;
-}
-
 function disableButtons(disabled) {
 	var ids = ["disconnectButton", "cmdButton", "scriptButton", "subscribeButton", "testButton"];
 	for (var i = 0; i < ids.length; ++i) {
@@ -949,7 +945,7 @@ function cmdStrKey(e, el) {
 	}
 }
 
-function sendScript(script, keysStr, argsStr) {
+function sendScript2(script, keysStr, argsStr) {
 	var keys = parseArgs(keysStr);
 	var args = parseArgs(argsStr);
 	var callTime = new Date().getTime();
@@ -957,6 +953,11 @@ function sendScript(script, keysStr, argsStr) {
 		document.getElementById("scriptTime").textContent = ((new Date().getTime()) - callTime) + " ms";
 		document.getElementById("scriptResponse").innerHTML = prettyResponse(result, err);
 	});
+}
+
+function sendScript() {
+	var src = LUAEDITOR ? LUAEDITOR.getValue() : document.getElementById("scriptTextEditor").value;
+	sendScript2(src, document.getElementById("scriptKeys").value, document.getElementById("scriptArgs").value);
 }
 
 function disconnect() {
