@@ -1196,9 +1196,3 @@ function changeTimerLen() {
 	}
 }
 
-
-// ECHO [33,"hi",-5.06e-34,[[]], U null,    false -.;.\\. true, 18446744073709566,"xk\njrkj\telrjwlkejrfwklejrkwjer",[247923798734982734]]
-// ECHO [33,"hi",-5.06e-34,[[]], null, false, true, 18446744073709566,"kjrkjelrjwlkejrfwklejrkwjer",[247923798734982734]]
-// 18446744073709566
-
-
