@@ -217,9 +217,8 @@ function OpaByteArrayOutputStream(size) {
 	this.mBuff = new Uint8Array(size ? size : 256);
 	this.mLen = 0;
 }
-var P = OpaByteArrayOutputStream.prototype;
 
-P.write = function(b) {
+OpaByteArrayOutputStream.prototype.write = function(b) {
 	// TODO: check type of argument
 	if (!b) {
 		return;
@@ -237,12 +236,12 @@ P.write = function(b) {
 	this.mLen += b.length;
 }
 
-P.write1 = function(v) {
+OpaByteArrayOutputStream.prototype.write1 = function(v) {
 	this.mTmpBuff[0] = v;
 	this.write(this.mTmpBuff);
 }
 
-P.toByteArray = function() {
+OpaByteArrayOutputStream.prototype.toByteArray = function() {
 	return this.mBuff.subarray(0, this.mLen);
 }
 
