@@ -1,7 +1,14 @@
 "use strict";
 
 var WSCONN;
-var RECONNECT = {};
+var RECONNECT = {
+	/** @type {boolean} */
+	doit:false,
+	/** @type {?string} */
+	url:null,
+	/** @type {?string} */
+	pass:null
+};
 /**
  * @type {?Opatomic.Client}
  */
@@ -24,6 +31,9 @@ var GTIMEOUT;
 
 var ACELOADED = false;
 var UPLOTLOADED = false;
+/**
+ * @type {?ace.Editor}
+ */
 var LUAEDITOR;
 
 
@@ -1000,7 +1010,7 @@ function reconnectIfNeeded() {
 			if (xhr.status == 200) {
 				// note: this will log an error to console every time it fails; no clue how to prevent this
 				//   "Firefox can't establish a connection to the server at ws://localhost:8080/."
-				connect(RECONNECT.url, RECONNECT.pass);
+				connect(/** @type {string} */ (RECONNECT.url), RECONNECT.pass);
 				if (!WSCONN) {
 					RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
 				}
@@ -1038,7 +1048,7 @@ function setStatusConnected() {
 
 /**
  * @param {string} url
- * @param {string} pass
+ * @param {?string=} pass
  */
 function connect2(url, pass) {
 	if (WSCONN) {
@@ -1069,7 +1079,7 @@ function connect2(url, pass) {
 		document.getElementById("pubsubMessages").innerHTML = "";
 		disableButtons(false);
 		RECONNECT.url = url;
-		RECONNECT.pass = pass;
+		RECONNECT.pass = pass ? pass : null;
 		if (pass && pass != "") {
 			OPAC.call("AUTH", [pass], function(err, result) {
 				if (!err || isErrCode(err, ERRCODE_AUTH)) {
@@ -1119,7 +1129,7 @@ function connect2(url, pass) {
 
 /**
  * @param {string} url
- * @param {string} pass
+ * @param {?string=} pass
  */
 function connect(url, pass) {
 	try {
