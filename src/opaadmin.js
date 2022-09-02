@@ -923,18 +923,35 @@ function sendCommand(cmdString, cb) {
 
 		OPAC.call(cmd, args, cb);
 	} catch (e) {
-		// note: must delay printing error message in case there were
-		// successful commands sent to server before this one.
-		OPAC.call("PING", null, function(err, result) {
-			cb(null, "Exception occurred in sendCommand(): " + e);
-		});
+		// eslint-disable-next-line n/no-callback-literal
+		cb("Exception occurred in sendCommand(): " + e);
 	}
 }
 
-function sendLine(line, callTime) {
+var RESULTS_TIMER = null;
+
+function getResultsHtml(results) {
+	var resHtml = "";
+	for (var i = 0; i < results.length; ++i) {
+		resHtml += "<pre>&gt; " + escEntities(results[i][0]) + "</pre><pre><code class=\"pretty\">" + prettyResponse(results[i][1], results[i][2]) + "</code></pre>";
+	}
+	return resHtml;
+}
+
+function sendLine(line, resultsObj) {
+	var idx = resultsObj.results.length;
+	resultsObj.results.push([line, null, null]);
 	sendCommand(line, function(err, result) {
-		document.getElementById("execTime").textContent = ((new Date().getTime()) - callTime) + " ms";
-		document.getElementById("results").innerHTML += "<pre>&gt; " + escEntities(line) + "</pre><pre><code class=\"pretty\">" + prettyResponse(result, err) + "</code></pre>";
+		resultsObj.execTime = (new Date().getTime()) - resultsObj.callTime;
+		resultsObj.results[idx] = [line, result, err];
+		clearTimeout(RESULTS_TIMER);
+		// note: setTimeout() is used to reduce number of gui re-renderings needed when many queries are running fast (batching)
+		// TODO: force re-render after a certain length of time to prevent many queries from delaying a render for a long period of time
+		//       (current code just extends the time when a result is received before timer callback is executed).
+		RESULTS_TIMER = setTimeout(function() {
+			document.getElementById("execTime").textContent = resultsObj.execTime.toString() + " ms";
+			document.getElementById("results").innerHTML = getResultsHtml(resultsObj.results);
+		}, 30);
 	});
 }
 
@@ -944,14 +961,15 @@ function sendLine(line, callTime) {
 function parseAndSend(cmdString) {
 	try {
 		var lines = cmdString.trim().split("\n");
+		clearTimeout(RESULTS_TIMER);
+		var resultsObj = { results: [], callTime: (new Date().getTime()), execTime: 0 };
 		document.getElementById("results").innerHTML = "";
-		var callTime = new Date().getTime();
 		for (var i = 0; i < lines.length; ++i) {
 			var line = lines[i].trim();
 			if (line.length == 0) {
 				continue;
 			}
-			sendLine(line, callTime);
+			sendLine(line, resultsObj);
 		}
 		OPAC.flush();
 	} catch (e) {
