@@ -3,11 +3,11 @@
 var WSCONN;
 var RECONNECT = {
 	/** @type {boolean} */
-	doit:false,
+	doit: false,
 	/** @type {?string} */
-	url:null,
+	url: null,
 	/** @type {?string} */
-	pass:null
+	pass: null
 };
 /**
  * @type {?Opatomic.Client}
