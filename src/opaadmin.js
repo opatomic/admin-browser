@@ -127,6 +127,12 @@ function chartSplits(scaleMax) {
 	return splits;
 }
 
+/**
+ * @param {string} id
+ * @param {string} label
+ * @param {number} numPoints
+ * @param {string} color
+ */
 function newChart(id, label, numPoints, color) {
 	var dataObj = [
 		new Array(numPoints),
@@ -331,6 +337,12 @@ function infoRow(name, val) {
 	return "";
 }
 
+/**
+ * @param {Object} result
+ * @param {string} rkey
+ * @param {string} elid
+ * @param {function(number):string} fconv
+ */
 function resSetText(result, rkey, elid, fconv) {
 	if (rkey in result) {
 		document.getElementById(elid).textContent = fconv ? fconv(result[rkey]) : result[rkey];
@@ -356,8 +368,8 @@ function isClosedErr(errResponse) {
 
 function updateCharts() {
 	var callTime = new Date().getTime();
-	OPAC.callA("INFO", null, function(err, response) {
-		if (!response || err) {
+	OPAC.callA("INFO", null, function(err, responseObj) {
+		if (!responseObj || err) {
 			// an error might occur when client is closed with an outstanding INFO request
 			if (!isClosedErr(err)) {
 				// TODO: handle err better
@@ -367,6 +379,8 @@ function updateCharts() {
 			}
 			return;
 		}
+		var response = /** @type {!Array<string>} */ (responseObj);
+
 		var currTime = new Date().getTime();
 		var timeElapsed = GSTATSTIME ? (currTime - GSTATSTIME) / 1000 : 1;
 		GSTATSTIME = currTime;
@@ -930,6 +944,10 @@ function sendCommand(cmdString, cb) {
 
 var RESULTS_TIMER = null;
 
+/**
+ * @param {!Array} results
+ * @return {string}
+ */
 function getResultsHtml(results) {
 	var resHtml = "";
 	for (var i = 0; i < results.length; ++i) {
@@ -938,6 +956,19 @@ function getResultsHtml(results) {
 	return resHtml;
 }
 
+/**
+ * @constructor
+ */
+function Results() {
+	this.callTime = (new Date()).getTime();
+	this.execTime = 0;
+	this.results = [];
+}
+
+/**
+ * @param {string} line
+ * @param {!Results} resultsObj
+ */
 function sendLine(line, resultsObj) {
 	var idx = resultsObj.results.length;
 	resultsObj.results.push([line, null, null]);
@@ -962,7 +993,7 @@ function parseAndSend(cmdString) {
 	try {
 		var lines = cmdString.trim().split("\n");
 		clearTimeout(RESULTS_TIMER);
-		var resultsObj = { results: [], callTime: (new Date().getTime()), execTime: 0 };
+		var resultsObj = new Results();
 		document.getElementById("results").innerHTML = "";
 		for (var i = 0; i < lines.length; ++i) {
 			var line = lines[i].trim();
