@@ -551,7 +551,7 @@ function testBD() {
 	testBD2("123e2", "123e-2");
 }
 
-function opaBenchParser(o, its) {
+function opaBenchParser() {
 	var its = 1000000;
 	console.log("time: " + opaBenchParserObj([2147483646], its));
 	console.log("time: " + opaBenchParserObj([0], its));
