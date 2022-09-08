@@ -1,0 +1,16 @@
+#!/bin/sh
+
+mkdir -p tools
+cd tools || exit 1
+if [ ! -d "node_modules" ]; then
+	npm init -y
+	npm install eslint eslint-config-standard eslint-plugin-promise eslint-plugin-import eslint-plugin-n --save-dev
+fi
+cd - > /dev/null || exit 1
+
+cp eslint.config.js tools
+
+cp ../src/opaadmin.js tools
+cd tools || exit 1
+node ./node_modules/eslint/bin/eslint.js --no-eslintrc -c eslint.config.js opaadmin.js
+cd - > /dev/null

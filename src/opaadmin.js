@@ -1,5 +1,7 @@
 "use strict";
 
+/* global Opatomic:false, ace:false, uPlot:false, opaCompare:false, OPATESTCASES:false */
+
 var WSCONN;
 var RECONNECT = {
 	/** @type {boolean} */
@@ -35,8 +37,6 @@ var UPLOTLOADED = false;
  * @type {?ace.Editor}
  */
 var LUAEDITOR;
-
-
 
 
 /**
@@ -1059,6 +1059,7 @@ function reconnectIfNeeded() {
 			if (xhr.status == 200) {
 				// note: this will log an error to console every time it fails; no clue how to prevent this
 				//   "Firefox can't establish a connection to the server at ws://localhost:8080/."
+				// eslint-disable-next-line no-use-before-define
 				connect(/** @type {string} */ (RECONNECT.url), RECONNECT.pass);
 				if (!WSCONN) {
 					RECONNECT.timeout = setTimeout(reconnectIfNeeded, 1000);
