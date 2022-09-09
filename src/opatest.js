@@ -445,8 +445,6 @@ function opaTestParse(o) {
 		}
 	}
 
-	//testBD();
-
 	opaBenchParser();
 
 	console.log("done");
@@ -475,80 +473,6 @@ function opaBenchParserObj(o, its) {
 		}
 	}
 	return (new Date().getTime()) - t;
-}
-
-function ensureEqual(a, b) {
-	if (opaCompare(a, b) != 0) {
-		throw "objects not equal " + a.toString() + " != " + b.toString();
-	}
-}
-
-function testBDstr(s) {
-	ensureEqual(Big(s), new BigDec(s));
-	ensureEqual(new BigDec(s), Big(s));
-	if (s.charAt(0) != "-") {
-		testBDstr("-" + s);
-	}
-	ensureEqual(Big(s).add(Big(s)), (new BigDec(s)).add(new BigDec(s)));
-	ensureEqual(Big(s).sub(Big(s)), (new BigDec(s)).subtract(new BigDec(s)));
-	ensureEqual(Big(s).mul(Big(s)), (new BigDec(s)).multiply(new BigDec(s)));
-}
-
-function testBD2(a, b) {
-	ensureEqual(Big(a), new BigDec(a));
-	ensureEqual(Big(b), new BigDec(b));
-}
-
-function testBD() {
-/*
-	var nums1 = ["0","1",
-		"2147483646","2147483647","2147483648","2147483649",
-		"4294967294","4294967295","4294967296","4294967297",
-		"9223372036854775806","9223372036854775807","9223372036854775808","9223372036854775809",
-		"18446744073709551614","18446744073709551615","18446744073709551616","18446744073709551617"
-	];
-	var nums2;
-	for (var i = 0; i < nums1.length; ++i) {
-		//nums2.push(Big(nums1[i]));
-		//nums2.push(Big("-" + nums1[i]));
-		nums2.push(Big(nums1[i]));
-		nums2.push(Big("-" + nums1[i]));
-		for (var j = 0; j < nums1.length; ++j) {
-			nums2.push(Big(nums1[i] + "e" + nums1[j]));
-			nums2.push(Big(nums1[i] + "e-" + nums1[j]));
-			nums2.push(Big("-" + nums1[i] + "e" + nums1[j]));
-			nums2.push(Big("-" + nums1[i] + "e-" + nums1[j]));
-		}
-	}
-	for (var i = 0; i < nums2.length) {
-		for (var j = 0; j < nums2.length; ++j) {
-			var bd1 = new BigDec(new BigInteger(nums2[i].toString()));
-		}
-	}
-	*/
-
-	//ensureEqual(Big("0").minus(Big("123e4")), (new BigDec("0")).subtract(new BigDec("123e4")));
-	//ensureEqual(Big("123e-2"), new BigDec("123e-2"));
-	testBDstr("123e4");
-	testBDstr("123e-4");
-	testBDstr("123e+4");
-	//testBDstr("123e");
-	testBDstr("123e0");
-	testBDstr("123e000000");
-	testBDstr("123e0000004");
-	testBDstr(".123");
-	testBDstr("123.");
-	testBDstr("0.123");
-	testBDstr("123.0");
-	testBDstr("123.0000000000");
-	testBDstr("0000000000000.123");
-	testBDstr("0e4");
-	testBDstr("0e+4");
-	testBDstr("0e-4");
-	testBDstr("0e0");
-
-	testBD2("123", "123");
-	testBD2("123e2", "123e-2");
 }
 
 function opaBenchParser() {
