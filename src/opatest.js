@@ -1,3 +1,6 @@
+"use strict";
+
+/* global Opatomic:false */
 
 var BigInteger = Opatomic.BigInteger;
 var BigDec = Opatomic.BigDec;
@@ -5,7 +8,7 @@ var BigDec = Opatomic.BigDec;
 var OPATESTCASESNEW = [
 	"SADD set1 a b c", 3,
 	"SADD set2 b c d", 3,
-	"SUNION set1 set2", ["a","b","c","d"],
+	"SUNION set1 set2", ["a", "b", "c", "d"],
 	"SINTER set1 set2", ["b", "c"],
 	"SDIFF set1 set2", ["a"]
 ];
@@ -41,15 +44,15 @@ var OPATESTCASES = [
 
 	"DEL set1 set2 set3", 0,
 	"SADD set1 a b c", 3,
-	"SUNION set1 set2", ["a","b","c"],
-	"SUNION set2 set1", ["a","b","c"],
+	"SUNION set1 set2", ["a", "b", "c"],
+	"SUNION set2 set1", ["a", "b", "c"],
 	"SINTER set1 set2", [],
 	"SINTER set2 set1", [],
-	"SDIFF set1 set2", ["a","b","c"],
+	"SDIFF set1 set2", ["a", "b", "c"],
 	"SDIFF set2 set1", [],
 	"SADD set2 b c d", 3,
-	"SUNION set1 set2", ["a","b","c","d"],
-	"SUNION set2 set1", ["a","b","c","d"],
+	"SUNION set1 set2", ["a", "b", "c", "d"],
+	"SUNION set2 set1", ["a", "b", "c", "d"],
 	"SINTER set1 set2", ["b", "c"],
 	"SINTER set2 set1", ["b", "c"],
 	"SDIFF set1 set2", ["a"],
@@ -57,23 +60,23 @@ var OPATESTCASES = [
 	"SADD set3 a", 1,
 	"SDIFF set1 set2 set3", [],
 	"SDIFF set1 NONE set2 set3", [],
-	"SDIFF set1 NONE", ["a","b","c"],
+	"SDIFF set1 NONE", ["a", "b", "c"],
 	"SINTERSTORE out set1 set2", 2,
 	"SRANGE out LIMIT 10", ["b", "c"],
 	"SINTERSTORE out set1 set2 none", 0,
 	"SRANGE out LIMIT 10", [],
-	"KEYS LIMIT 20", ["set1","set2","set3"],
+	"KEYS LIMIT 20", ["set1", "set2", "set3"],
 	"DBSIZE", 3,
 	"SUNIONSTORE out set1 set2", 4,
-	"SRANGE out LIMIT 10", ["a","b","c","d"],
+	"SRANGE out LIMIT 10", ["a", "b", "c", "d"],
 	"DBSIZE", 4,
 	"DEL out", 1,
 	"DBSIZE", 3,
 	"SUNIONSTORE out none set1 set2", 4,
-	"SRANGE out LIMIT 10", ["a","b","c","d"],
+	"SRANGE out LIMIT 10", ["a", "b", "c", "d"],
 	"DEL out", 1,
 	"SUNIONSTORE out set1 set2 none", 4,
-	"SRANGE out LIMIT 10", ["a","b","c","d"],
+	"SRANGE out LIMIT 10", ["a", "b", "c", "d"],
 	"DEL out", 1,
 	"DEL set1 set2 set3", 3,
 
@@ -82,14 +85,14 @@ var OPATESTCASES = [
 	"ZADD zs1 10 a", 1,
 	"ZADD zs1 11 b", 1,
 	"ZADD zs1 12 c", 1,
-	"ZRANGE zs1 0 -1", ["a","b","c"],
+	"ZRANGE zs1 0 -1", ["a", "b", "c"],
 	"ZADD zs1 -12.123 c", 0,
-	"ZRANGE zs1 0 -1", ["c","a","b"],
-	"ZRANGE zs1 0 -1 WITHSCORES", ["c",-12.123,"a",10,"b",11],
+	"ZRANGE zs1 0 -1", ["c", "a", "b"],
+	"ZRANGE zs1 0 -1 WITHSCORES", ["c", -12.123, "a", 10, "b", 11],
 	"ZADD zs1 13 d 14 e 15 f 12 c", 3,
-	"ZRANGE zs1 0 -1", ["a","b","c","d","e","f"],
+	"ZRANGE zs1 0 -1", ["a", "b", "c", "d", "e", "f"],
 	"ZADD zs1 -1 d -2.2 e -3.3 f", 0,
-	"ZRANGE zs1 0 -1", ["f","e","d","a","b","c"],
+	"ZRANGE zs1 0 -1", ["f", "e", "d", "a", "b", "c"],
 	"ZCARD zs1", 6,
 	"ZINCRBY zs1 -1.1 f", -4.4,
 	"ZUNIONSTORE zs2 1 none", 0,
@@ -113,11 +116,11 @@ var OPATESTCASES = [
 	"RPUSHX list1 a", 0,
 	"LPUSH list1 c b a", 3,
 	"RPUSH list1 d e f g", 7,
-	"LRANGE list1 0 -1", ["a","b","c","d","e","f","g"],
-	"LRANGE list1 1 -1", ["b","c","d","e","f","g"],
-	"LRANGE list1 1 -2", ["b","c","d","e","f"],
+	"LRANGE list1 0 -1", ["a", "b", "c", "d", "e", "f", "g"],
+	"LRANGE list1 1 -1", ["b", "c", "d", "e", "f", "g"],
+	"LRANGE list1 1 -2", ["b", "c", "d", "e", "f"],
 	"LRANGE list1 1 0", [],
-	"LRANGE list1 -2 -1", ["f","g"],
+	"LRANGE list1 -2 -1", ["f", "g"],
 	"LRANGE list1 -3 -4", [],
 	"LRANGE list1 10 11", [],
 	"LRANGE list1 2 2", ["c"],
@@ -140,8 +143,8 @@ var OPATESTCASES = [
 	"LLEN list1", 4,
 	"LLEN list2", 3,
 	"LLEN none", 0,
-	"LRANGE list1 0 -1", ["a","b","c","d"],
-	"LRANGE list2 0 -1", ["e","f","g"],
+	"LRANGE list1 0 -1", ["a", "b", "c", "d"],
+	"LRANGE list2 0 -1", ["e", "f", "g"],
 	"RPOP list2", "g",
 	"RPOP list2", "f",
 	"RPOP list2", "e",
@@ -151,7 +154,7 @@ var OPATESTCASES = [
 	"LINSERT list1 0 a b", 4,
 	"LINSERT list1 4 e f g", 7,
 	"LTRIM list1 1 -1", 6,
-	"LRANGE list1 0 -1", ["b","c","d","e","f","g"],
+	"LRANGE list1 0 -1", ["b", "c", "d", "e", "f", "g"],
 	"LINSERT list1 -1 g h i j", 10,
 	"LSET list1 -1 k", 1,
 	"LSET list1 -20 k", -1,
@@ -159,7 +162,7 @@ var OPATESTCASES = [
 	"LSET list1 10 k", -1,
 	"LSET list1 9 k", 1,
 	"LSET none 0 k", 0,
-	"LRANGE list1 0 -1", ["b","c","d","e","f","g","h","i","j","k"],
+	"LRANGE list1 0 -1", ["b", "c", "d", "e", "f", "g", "h", "i", "j", "k"],
 	// TODO: more LINSERT LREMRANGE LSET LTRIM
 	"DEL list1", 1,
 
@@ -169,9 +172,9 @@ var OPATESTCASES = [
 	"DDEL none f1", 1,
 	"DSETNX m1 f1 v11", 0,
 	"DSETNX m1 f4 v4", 1,
-	"DVALS m1", ["v1","v2","v3","v4"],
+	"DVALS m1", ["v1", "v2", "v3", "v4"],
 	"DVALS none", [],
-	"DKEYS m1 LIMIT 10", ["f1","f2","f3","f4"],
+	"DKEYS m1 LIMIT 10", ["f1", "f2", "f3", "f4"],
 	"DKEYS none LIMIT 10", [],
 	"DEXISTS none f1", 0,
 	"DEXISTS m1 f0", 0,
@@ -206,7 +209,7 @@ var OPATESTCASES = [
 	"BAPPEND b1 " + Opatomic.stringify(testbin), testbin.length * 5,
 	"DEL b1", 1,
 
-	"BATCH [INCR exp1] [INCR exp1] [PEXPIRE NONE 2000] [PEXPIRE exp1 2000] [PEXPIRE exp1 1000]", [1,2,0,1,1],
+	"BATCH [INCR exp1] [INCR exp1] [PEXPIRE NONE 2000] [PEXPIRE exp1 2000] [PEXPIRE exp1 1000]", [1, 2, 0, 1, 1],
 ];
 
 
@@ -234,88 +237,86 @@ OpaByteArrayOutputStream.prototype.write = function(b) {
 	}
 	this.mBuff.set(b, this.mLen);
 	this.mLen += b.length;
-}
+};
 
 OpaByteArrayOutputStream.prototype.write1 = function(v) {
 	this.mTmpBuff[0] = v;
 	this.write(this.mTmpBuff);
-}
+};
 
 OpaByteArrayOutputStream.prototype.toByteArray = function() {
 	return this.mBuff.subarray(0, this.mLen);
-}
-
-
+};
 
 function opaCompare(o1, o2) {
 	var t1 = Opatomic.opaType(o1);
 	var t2 = Opatomic.opaType(o2);
+	var i;
 	switch (t1) {
-		case 'undefined':
-			if (t2 == 'undefined') {
+		case "undefined":
+			if (t2 == "undefined") {
 				return 0;
 			}
 			return -1;
-		case 'null':
-			if (t2 == 'undefined') {
+		case "null":
+			if (t2 == "undefined") {
 				return 1;
-			} else if (t2 == 'null') {
+			} else if (t2 == "null") {
 				return 0;
 			}
 			return -1;
-		case 'boolean':
-			if (t2 == 'undefined' || t2 == 'null') {
+		case "boolean":
+			if (t2 == "undefined" || t2 == "null") {
 				return 1;
-			} else if (t2 == 'boolean') {
+			} else if (t2 == "boolean") {
 				return o1 === o2 ? 0 : (o2 ? -1 : 1);
 			}
 			return -1;
-		case 'number':
-			if (t2 == 'number') {
+		case "number":
+			if (t2 == "number") {
 				if (o1 < o2) {
 					return -1;
 				}
 				return o1 == o2 ? 0 : 1;
-			} else if (t2 == 'undefined' || t2 == 'null' || t2 == 'boolean') {
+			} else if (t2 == "undefined" || t2 == "null" || t2 == "boolean") {
 				return 1;
-			}
-			// fall thru
-		case 'BigInteger':
+			} // eslint-disable-line no-fallthrough
+		case "BigInteger":
 			return opaCompare(new BigDec(o1.toString()), o2);
 		case "BigDec":
-			if (t2 == 'BigDec') {
+			if (t2 == "BigDec") {
 				return o1.compareTo(o2);
-			} else if (t2 == 'number' || t2 == 'BigInteger') {
+			} else if (t2 == "number" || t2 == "BigInteger") {
 				return o1.compareTo(new BigDec(o2.toString()));
-			} else if (t2 == 'undefined' || t2 == 'null' || t2 == 'boolean') {
+			} else if (t2 == "undefined" || t2 == "null" || t2 == "boolean") {
 				return 1;
 			}
 			return -1;
-		case 'Uint8Array':
-			if (t2 == 'Uint8Array') {
+		case "Uint8Array":
+			if (t2 == "Uint8Array") {
 				var minLen = Math.min(o1.byteLength, o2.byteLength);
-				for (var i = 0; i < minLen; ++i) {
+				for (i = 0; i < minLen; ++i) {
 					if (o1[i] !== o2[i]) {
 						return o1[i] < o2[i] ? -1 : 1;
 					}
 				}
 				return o1.byteLength - o2.byteLength;
-			} else if (t2 == 'string' || t2 == 'Array') {
+			} else if (t2 == "string" || t2 == "Array") {
 				return -1;
 			}
 			return 1;
-		case 'string':
-			if (t2 == 'string') {
+		case "string":
+			if (t2 == "string") {
 				// TODO: is this correct?
 				return o1.localeCompare(o2);
-			} else if (t2 == 'Array') {
+			} else if (t2 == "Array") {
 				return -1;
 			}
 			return 1;
-		case 'Array':
-			if (t2 == 'Array') {
+		case "Array":
+			if (t2 == "Array") {
 				var imin = Math.min(o1.length, o2.length);
-				for (var i = 0; i < imin; ++i) {
+				for (i = 0; i < imin; ++i) {
 					var cmp = opaCompare(o1[i], o2[i]);
 					if (cmp != 0) {
 						return cmp;
@@ -326,7 +327,7 @@ function opaCompare(o1, o2) {
 				return 1;
 			}
 	}
-	throw "unhandled case in switch";
+	throw new Error("unhandled case in switch");
 }
 
 
@@ -352,14 +353,14 @@ function opaTestParseObj(o) {
 			var check = pp.parseNext(b);
 			if (check != null) {
 				if (i != bytes.length - 1) {
-					throw "finish parse early";
+					throw new Error("finish parse early");
 				}
 				if (opaCompare(o, check) != 0) {
-					throw "objects not equal " + Opatomic.stringify(o) + " != " + Opatomic.stringify(check);
+					throw new Error("objects not equal " + Opatomic.stringify(o) + " != " + Opatomic.stringify(check));
 				}
 			} else {
 				if (i == bytes.length - 1) {
-					throw "obj not parsed";
+					throw new Error("obj not parsed");
 				}
 			}
 		}
@@ -377,7 +378,7 @@ function opaTestParse(o) {
 	}
 
 	opaTestParseObj(["hello"]);
-	opaTestParseObj([["hello"],0,-1,1,83489234,[],"",null,false, true, "str", new Uint8Array(0), new Uint8Array(2)]);
+	opaTestParseObj([["hello"], 0, -1, 1, 83489234, [], "", null, false, true, "str", new Uint8Array(0), new Uint8Array(2)]);
 
 	opaTestParseObj([undefined]);
 	opaTestParseObj([null]);
@@ -423,14 +424,14 @@ function opaTestParse(o) {
 	opaTestParseObj([new BigDec("-98237947237489237497239847892374987238947e876238762")]);
 	opaTestParseObj([new BigDec("-98237947237489237497239847892374987238947e-876238762")]);
 
-	var mans = ["0","1",
-		"2147483646","2147483647","2147483648","2147483649",
-		"4294967294","4294967295","4294967296","4294967297",
-		"9223372036854775806","9223372036854775807","9223372036854775808","9223372036854775809",
-		"18446744073709551614","18446744073709551615","18446744073709551616","18446744073709551617"
+	var mans = ["0", "1",
+		"2147483646", "2147483647", "2147483648", "2147483649",
+		"4294967294", "4294967295", "4294967296", "4294967297",
+		"9223372036854775806", "9223372036854775807", "9223372036854775808", "9223372036854775809",
+		"18446744073709551614", "18446744073709551615", "18446744073709551616", "18446744073709551617"
 	];
-	var exps = ["0","1","2","3",
-		"2147483646","2147483647"
+	var exps = ["0", "1", "2", "3",
+		"2147483646", "2147483647"
 	];
 	for (var i = 0; i < mans.length; ++i) {
 		opaTestParseObj([new BigDec(mans[i])]);
@@ -469,7 +470,7 @@ function opaBenchParserObj(o, its) {
 		b.len = bytes.length;
 		var obj = pp.parseNext(b);
 		if (obj == null) {
-			throw "obj not parsed"
+			throw new Error("obj not parsed");
 		}
 	}
 	return (new Date().getTime()) - t;
