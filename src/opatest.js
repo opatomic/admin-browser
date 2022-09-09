@@ -248,6 +248,14 @@ OpaByteArrayOutputStream.prototype.toByteArray = function() {
 	return this.mBuff.subarray(0, this.mLen);
 };
 
+function opaRpcEncode(val) {
+	var out = new OpaByteArrayOutputStream();
+	var s = new Opatomic.Serializer(out);
+	s.writeObject(val);
+	s.flush();
+	return out.toByteArray();
+}
+
 function opaCompare(o1, o2) {
 	var t1 = Opatomic.opaType(o1);
 	var t2 = Opatomic.opaType(o2);
@@ -449,14 +457,6 @@ function opaTestParse(o) {
 	opaBenchParser();
 
 	console.log("done");
-}
-
-function opaRpcEncode(val) {
-	var out = new OpaByteArrayOutputStream();
-	var s = new Opatomic.Serializer(out);
-	s.writeObject(val);
-	s.flush();
-	return out.toByteArray();
 }
 
 function opaBenchParserObj(o, its) {
