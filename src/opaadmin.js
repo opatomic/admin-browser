@@ -1002,7 +1002,6 @@ function parseAndSend(cmdString) {
 			}
 			sendLine(line, resultsObj);
 		}
-		OPAC.flush();
 	} catch (e) {
 		if (console) {
 			console.log(e);
@@ -1082,7 +1081,6 @@ function closeClient() {
 	disableButtons(true);
 	clearTimeout(GTIMEOUT);
 	if (OPAC) {
-		OPAC.onClose();
 		OPAC = null;
 	}
 	if (RECONNECT.timeout) {
