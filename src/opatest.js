@@ -290,6 +290,7 @@ function opaCompare(o1, o2) {
 				return 1;
 			} // eslint-disable-line no-fallthrough
 		case "BigInteger":
+		case "bigint":
 			return opaCompare(new BigDec(o1.toString()), o2);
 		case "BigDec":
 			if (t2 == "BigDec") {
