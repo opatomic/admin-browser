@@ -215,12 +215,19 @@ var OPATESTCASES = [
 
 // ECHO [33,"hi",-5.06e-34,[[]], U null,    false -.;.\\. true, 18446744073709566,"xk\njrkj\telrj\\wl\bkejrfwklejrkwjer",[247923798734982734 ~binhello [child1 [b1 b2 123 123.4] [boo] child2]]]
 
+/**
+ * @constructor
+ * @param {number=} size
+ */
 function OpaByteArrayOutputStream(size) {
 	this.mTmpBuff = new Uint8Array(1);
 	this.mBuff = new Uint8Array(size ? size : 256);
 	this.mLen = 0;
 }
 
+/**
+ * @param {!Uint8Array} b
+ */
 OpaByteArrayOutputStream.prototype.write = function(b) {
 	// TODO: check type of argument
 	if (!b) {
@@ -239,15 +246,25 @@ OpaByteArrayOutputStream.prototype.write = function(b) {
 	this.mLen += b.length;
 };
 
+/**
+ * @param {number} v
+ */
 OpaByteArrayOutputStream.prototype.write1 = function(v) {
 	this.mTmpBuff[0] = v;
 	this.write(this.mTmpBuff);
 };
 
+/**
+ * @return {!Uint8Array}
+ */
 OpaByteArrayOutputStream.prototype.toByteArray = function() {
 	return this.mBuff.subarray(0, this.mLen);
 };
 
+/**
+ * @param {*} val
+ * @return {!Uint8Array}
+ */
 function opaRpcEncode(val) {
 	var out = new OpaByteArrayOutputStream();
 	var s = new Opatomic.Serializer(out);
@@ -256,6 +273,11 @@ function opaRpcEncode(val) {
 	return out.toByteArray();
 }
 
+/**
+ * @param {*} o1
+ * @param {*} o2
+ * @return {number}
+ */
 function opaCompare(o1, o2) {
 	var t1 = Opatomic.opaType(o1);
 	var t2 = Opatomic.opaType(o2);
@@ -348,6 +370,9 @@ function opaCompare(o1, o2) {
 
 
 
+/**
+ * @param {*} o
+ */
 function opaTestParseObj(o) {
 	try {
 		var bytes = opaRpcEncode(o);
@@ -460,6 +485,11 @@ function opaTestParse(o) {
 	console.log("done");
 }
 
+/**
+ * @param {*} o
+ * @param {number} its
+ * @return {number}
+ */
 function opaBenchParserObj(o, its) {
 	var bytes = opaRpcEncode(o);
 	var pp = new Opatomic.PartialParser();
