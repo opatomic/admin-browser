@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "linting..."
+./lint
+
+if [ ! -f "$CCJAR" ] && [ "$CCJAR" != "0" ]; then
+	# if $CCJAR file does not exist, search current directory for CC
+	CCJAR=$(find -name "*closure*compiler*.jar" 2> /dev/null | LC_ALL=C sort | tail -1)
+fi
+
+CC_ARGS="--extra_annotation_name callback --extra_annotation_name hideconstructor -W VERBOSE"
+#CC_ARGS="$CC_ARGS --jscomp_warning=reportUnknownTypes"
+
+# ./build 2>&1 | grep JSC_ | grep -vE "JSC_VAR|JSC_MISSING_SEMICOLON"
+#CC_ARGS="$CC_ARGS --jscomp_warning \"*\" --jscomp_off=lintChecks"
+
+if [ -f "$CCJAR" ]; then
+	echo "checking with closure compiler..."
+	java -jar $CCJAR --js "../src/opaadmin.js" --externs "externs.js" --externs "opac.externs.js" --checks_only $CC_ARGS
+	#java -jar $CCJAR --js "../src/opatest.js" --externs "opac.externs.js" --checks_only $CC_ARGS
+else
+	[ "$CCJAR" = "0" ] || echo "CCJAR not found - will not run checks"
+fi
+
