@@ -321,7 +321,7 @@ function escEntities(s) {
  * @param {*} v
  * @return {string}
  */
-function strifyAndEsc(v) {
+function stringifyAndEsc(v) {
 	return escEntities(Opatomic.stringify(v));
 }
 
@@ -483,9 +483,9 @@ function prettyResponse2(obj, space, depth) {
 			return '<span class="num">' + Opatomic.stringify(obj) + "</span>";
 		case "Uint8Array":
 		case "Buffer":
-			return '<span class="blob">' + strifyAndEsc(obj) + "</span>";
+			return '<span class="blob">' + stringifyAndEsc(obj) + "</span>";
 		case "string":
-			return '<span class="str">' + strifyAndEsc(obj) + "</span>";
+			return '<span class="str">' + stringifyAndEsc(obj) + "</span>";
 		case "Array":
 			if (obj.length == 0) {
 				return "[]";
@@ -1215,11 +1215,11 @@ function runTestCase(cmd, expect, islast, results, callTime) {
 			var iresult = results[i];
 			allText += "<pre>" + "&gt; " + escEntities(iresult[0]) + "</pre>";
 			if (iresult[3]) {
-				allText += "<pre style=\"color:red\">" + strifyAndEsc(iresult[3]) + "</pre>";
+				allText += "<pre style=\"color:red\">" + stringifyAndEsc(iresult[3]) + "</pre>";
 			} else if (opaCompare(iresult[1], iresult[2]) != 0) {
-				allText += "<pre style=\"color:red\">Expected: " + strifyAndEsc(iresult[1]) + "\nReceived:" + strifyAndEsc(iresult[2]) + "</pre>";
+				allText += "<pre style=\"color:red\">Expected: " + stringifyAndEsc(iresult[1]) + "\nReceived:" + stringifyAndEsc(iresult[2]) + "</pre>";
 			} else {
-				allText += "<pre>" + strifyAndEsc(iresult[2]) + "</pre>";
+				allText += "<pre>" + stringifyAndEsc(iresult[2]) + "</pre>";
 			}
 		}
 
@@ -1245,7 +1245,7 @@ function runTestCases() {
 	} else {
 		sendCommand("DBSIZE", function(err, result) {
 			if (err) {
-				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">err: " + strifyAndEsc(err) + "</pre>";
+				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">err: " + stringifyAndEsc(err) + "</pre>";
 			} else if (result !== 0) {
 				document.getElementById("testResults").innerHTML = "<pre style=\"color:red\">DB is not empty</pre>";
 			} else {
